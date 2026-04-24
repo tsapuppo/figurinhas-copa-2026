@@ -355,7 +355,9 @@ async function startApp(){
   document.getElementById("login-screen").style.display="none";
   document.getElementById("app").style.display="block";
   document.getElementById("user-name").textContent=currentUser.nickname;
-  if(currentUser.is_admin)document.getElementById("tab-admin-btn").style.display="block";
+  const isAdmin = currentUser.is_admin===true||currentUser.is_admin==="true";
+  if(isAdmin) document.getElementById("tab-admin-btn").style.display="block";
+  else document.getElementById("tab-admin-btn").style.display="none";
   await loadCollection();
   render();
   fixSticky();
