@@ -458,13 +458,19 @@ async function updateSticker(key, i, qty) {
   updateSecBadge(key);
   updateGlobalStats();
   if (qty > 0 && prev === 0) showToast(key+numStr(i)+' colada! ✦');
-  // salvar no banco: delete sempre, depois insert se qty > 0
+  // salvar no banco
   try {
-    await apiDelete('collection', `?user_id=eq.${currentUser.id}&sticker_key=eq.${sk}`);
     if (qty === 0) {
+      await apiDelete('collection', `?user_id=eq.${currentUser.id}&sticker_key=eq.${sk}`);
       delete collection[sk];
     } else {
-      await apiPost('collection', { user_id: currentUser.id, sticker_key: sk, quantity: qty, updated_at: new Date().toISOString() });
+      // upsert via PATCH se existe, POST se não existe
+      const exists = await apiGet('collection', `?user_id=eq.${currentUser.id}&sticker_key=eq.${sk}`);
+      if (exists && exists.length > 0) {
+        await apiPatch('collection', { quantity: qty, updated_at: new Date().toISOString() }, `?user_id=eq.${currentUser.id}&sticker_key=eq.${sk}`);
+      } else {
+        await apiPost('collection', { user_id: currentUser.id, sticker_key: sk, quantity: qty, updated_at: new Date().toISOString() });
+      }
     }
   } catch(e) { console.error('Erro ao salvar:', e); }
 }
