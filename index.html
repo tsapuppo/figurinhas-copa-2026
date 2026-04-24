@@ -47,13 +47,13 @@ body { font-family:'Barlow',sans-serif; background:#0A1628; color:#F0F4FF; min-h
 .progress-fill { height:100%; background:linear-gradient(90deg,#00A86B,#F5C518); border-radius:3px; width:0%; transition:width 0.4s; }
 
 /* TABS */
-.tabs { background:#0F1F3D; border-bottom:1px solid rgba(255,255,255,0.07); padding:0 16px; }
+.tabs { background:#0F1F3D; border-bottom:1px solid rgba(255,255,255,0.07); padding:0 16px; position:sticky; top:0; z-index:99; }
 .tabs-inner { max-width:700px; margin:0 auto; display:flex; gap:0; }
 .tab { padding:10px 16px; font-size:13px; font-family:'Barlow Condensed',sans-serif; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; color:#4D6A94; cursor:pointer; border-bottom:2px solid transparent; transition:all 0.15s; white-space:nowrap; }
 .tab.active { color:#F5C518; border-bottom-color:#F5C518; }
 
 /* CONTROLS */
-.controls { background:#0F1F3D; padding:10px 16px; border-bottom:1px solid rgba(255,255,255,0.07); position:sticky; top:117px; z-index:99; }
+.controls { background:#0F1F3D; padding:10px 16px; border-bottom:1px solid rgba(255,255,255,0.07); position:sticky; top:0; z-index:99; }
 .controls-inner { max-width:700px; margin:0 auto; display:flex; gap:7px; flex-wrap:wrap; align-items:center; }
 .search-wrap { position:relative; flex:1; min-width:130px; }
 .search-wrap svg { position:absolute; left:9px; top:50%; transform:translateY(-50%); opacity:0.35; pointer-events:none; }
@@ -729,6 +729,20 @@ window.addEventListener('load', () => {
   const saved = localStorage.getItem('copa26_user');
   if (saved) { try { currentUser=JSON.parse(saved); startApp(); } catch(e) {} }
 });
+
+// Ajustar top das barras sticky dinamicamente
+function fixSticky() {
+  const header = document.querySelector('.header');
+  const tabs   = document.querySelector('.tabs');
+  const controls = document.querySelector('.controls');
+  if (!header || !tabs || !controls) return;
+  const hh = header.offsetHeight;
+  const th = tabs.offsetHeight;
+  tabs.style.top = hh + 'px';
+  controls.style.top = (hh + th) + 'px';
+}
+window.addEventListener('resize', fixSticky);
+setTimeout(fixSticky, 300);
 
 // Service Worker
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
