@@ -1,10 +1,9 @@
-const CACHE = 'figurinhas-copa-2026-v1';
+const CACHE = 'figurinhas-copa-2026-v2';
 const ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/icon.png',
-  'https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;700&display=swap'
+  '/icon.png'
 ];
 
 self.addEventListener('install', e => {
@@ -24,6 +23,11 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
+  // Ignorar tudo que não seja GET (POST, PATCH, DELETE etc vão direto)
+  if (e.request.method !== 'GET') return;
+  // Ignorar chamadas ao Supabase
+  if (e.request.url.includes('supabase.co')) return;
+
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;
