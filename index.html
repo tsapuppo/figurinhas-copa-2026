@@ -10,283 +10,499 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon.png">
 <title>Figurinhas Copa 2026</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;700&display=swap" rel="stylesheet">
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { min-height: 100%; }
-  body {
-    font-family: 'Barlow', sans-serif;
-    background: #0A1628;
-    color: #F0F4FF;
-    min-height: 100vh;
-    /* Safe area para iPhone com notch */
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-  }
+* { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+body { font-family:'Barlow',sans-serif; background:#0A1628; color:#F0F4FF; min-height:100vh; padding-top:env(safe-area-inset-top); }
 
-  .header { background: #0F1F3D; border-bottom: 1px solid rgba(255,255,255,0.12); padding: 0 16px; position: sticky; top: 0; z-index: 100; }
-  .header-inner { max-width: 700px; margin: 0 auto; }
-  .header-top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 10px 0 4px; }
-  .logo { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1px; color: #F5C518; line-height: 1; white-space: nowrap; }
-  .logo span { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; color: #8BA3CC; font-weight: 500; letter-spacing: 0.5px; }
-  .stats { display: flex; gap: 5px; flex: 1; justify-content: flex-end; flex-wrap: wrap; }
-  .stat { background: #1A2F52; border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 3px 9px; font-size: 11px; color: #8BA3CC; display: flex; align-items: center; gap: 4px; }
-  .stat strong { color: #F0F4FF; font-weight: 600; font-size: 13px; }
-  .stat.gold strong { color: #F5C518; }
-  .progress-track { height: 3px; background: #162647; border-radius: 3px; overflow: hidden; margin: 6px 0 8px; }
-  .progress-fill { height: 100%; background: linear-gradient(90deg, #00A86B, #F5C518); border-radius: 3px; width: 0%; transition: width 0.4s ease; }
+/* LOGIN */
+#login-screen { display:flex; align-items:center; justify-content:center; min-height:100vh; padding:24px; }
+.login-box { background:#0F1F3D; border:1px solid rgba(255,255,255,0.12); border-radius:16px; padding:36px 28px; width:100%; max-width:360px; }
+.login-logo { font-family:'Bebas Neue',sans-serif; font-size:28px; color:#F5C518; letter-spacing:1px; text-align:center; margin-bottom:4px; }
+.login-sub { font-size:13px; color:#8BA3CC; text-align:center; margin-bottom:28px; }
+.field { margin-bottom:16px; }
+.field label { display:block; font-size:12px; color:#8BA3CC; margin-bottom:6px; font-weight:500; letter-spacing:0.5px; text-transform:uppercase; }
+.field input { width:100%; padding:10px 14px; background:#1A2F52; border:1px solid rgba(255,255,255,0.15); border-radius:8px; color:#F0F4FF; font-family:'Barlow',sans-serif; font-size:15px; outline:none; }
+.field input:focus { border-color:#00A86B; }
+.btn-login { width:100%; padding:12px; background:#00A86B; border:none; border-radius:8px; color:#fff; font-family:'Barlow Condensed',sans-serif; font-size:16px; font-weight:700; letter-spacing:1px; text-transform:uppercase; cursor:pointer; margin-top:8px; }
+.login-error { color:#e74c3c; font-size:13px; text-align:center; margin-top:12px; display:none; }
 
-  .controls { background: #0F1F3D; padding: 10px 16px; border-bottom: 1px solid rgba(255,255,255,0.07); position: sticky; top: 63px; z-index: 99; }
-  .controls-inner { max-width: 700px; margin: 0 auto; display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
-  .search-wrap { position: relative; flex: 1; min-width: 130px; }
-  .search-wrap svg { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); opacity: 0.35; pointer-events: none; }
-  input[type=text] { width: 100%; padding: 7px 9px 7px 28px; background: #1A2F52; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #F0F4FF; font-family: 'Barlow', sans-serif; font-size: 13px; outline: none; -webkit-appearance: none; }
-  input[type=text]::placeholder { color: #4D6A94; }
-  input[type=text]:focus { border-color: #00A86B; }
+/* APP */
+#app { display:none; }
 
-  .btn { padding: 6px 11px; font-size: 12px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; background: transparent; color: #8BA3CC; cursor: pointer; white-space: nowrap; -webkit-tap-highlight-color: transparent; transition: background 0.15s, color 0.15s; }
-  .btn.active { background: #00A86B; border-color: #00A86B; color: #fff; }
-  .btn.danger { border-color: rgba(231,76,60,0.4); color: #e74c3c; }
+/* HEADER */
+.header { background:#0F1F3D; border-bottom:1px solid rgba(255,255,255,0.12); padding:0 16px; position:sticky; top:0; z-index:100; }
+.header-inner { max-width:700px; margin:0 auto; }
+.header-top { display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:8px 0 4px; }
+.logo { font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:1px; color:#F5C518; white-space:nowrap; }
+.logo span { font-family:'Barlow Condensed',sans-serif; font-size:12px; color:#8BA3CC; font-weight:500; }
+.user-badge { background:#1A2F52; border:1px solid rgba(255,255,255,0.1); border-radius:999px; padding:3px 10px; font-size:12px; color:#8BA3CC; display:flex; align-items:center; gap:6px; }
+.user-badge strong { color:#F0F4FF; }
+.btn-logout { margin-left:auto; padding:4px 10px; font-size:11px; font-family:'Barlow Condensed',sans-serif; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; border:1px solid rgba(255,255,255,0.15); border-radius:6px; background:transparent; color:#8BA3CC; cursor:pointer; }
+.stats { display:flex; gap:5px; flex-wrap:wrap; padding:4px 0 6px; }
+.stat { background:#1A2F52; border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:3px 9px; font-size:11px; color:#8BA3CC; display:flex; align-items:center; gap:4px; }
+.stat strong { color:#F0F4FF; font-weight:600; font-size:13px; }
+.stat.gold strong { color:#F5C518; }
+.progress-track { height:3px; background:#162647; border-radius:3px; overflow:hidden; margin-bottom:8px; }
+.progress-fill { height:100%; background:linear-gradient(90deg,#00A86B,#F5C518); border-radius:3px; width:0%; transition:width 0.4s; }
 
-  .main { max-width: 700px; margin: 0 auto; padding: 14px 16px 80px; }
+/* TABS */
+.tabs { background:#0F1F3D; border-bottom:1px solid rgba(255,255,255,0.07); padding:0 16px; }
+.tabs-inner { max-width:700px; margin:0 auto; display:flex; gap:0; }
+.tab { padding:10px 16px; font-size:13px; font-family:'Barlow Condensed',sans-serif; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; color:#4D6A94; cursor:pointer; border-bottom:2px solid transparent; transition:all 0.15s; white-space:nowrap; }
+.tab.active { color:#F5C518; border-bottom-color:#F5C518; }
 
-  .sec { margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; overflow: hidden; }
-  .sec-hdr { display: flex; align-items: center; gap: 10px; padding: 9px 13px; background: #1A2F52; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
-  .sec.open .sec-hdr { background: #1F3660; }
-  .sec-key { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1px; color: #F5C518; min-width: 42px; }
-  .sec-name { font-size: 12px; color: #8BA3CC; flex: 1; font-weight: 500; }
-  .sec-minibar { width: 50px; height: 3px; background: #0A1628; border-radius: 3px; overflow: hidden; flex-shrink: 0; }
-  .sec-minifill { height: 100%; background: #00A86B; border-radius: 3px; }
-  .sec-badge { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; white-space: nowrap; background: #0F1F3D; color: #8BA3CC; border: 1px solid rgba(255,255,255,0.08); }
-  .sec-badge.done { background: rgba(0,168,107,0.2); color: #00A86B; border-color: rgba(0,168,107,0.4); }
-  .sec-arrow { color: #4D6A94; font-size: 11px; transition: transform 0.2s; display: inline-block; }
-  .sec.open .sec-arrow { transform: rotate(90deg); }
-  .sec-body { display: none; padding: 11px 13px; background: #162647; }
-  .sec.open .sec-body { display: block; }
+/* CONTROLS */
+.controls { background:#0F1F3D; padding:10px 16px; border-bottom:1px solid rgba(255,255,255,0.07); position:sticky; top:117px; z-index:99; }
+.controls-inner { max-width:700px; margin:0 auto; display:flex; gap:7px; flex-wrap:wrap; align-items:center; }
+.search-wrap { position:relative; flex:1; min-width:130px; }
+.search-wrap svg { position:absolute; left:9px; top:50%; transform:translateY(-50%); opacity:0.35; pointer-events:none; }
+input[type=text] { width:100%; padding:7px 9px 7px 28px; background:#1A2F52; border:1px solid rgba(255,255,255,0.15); border-radius:6px; color:#F0F4FF; font-family:'Barlow',sans-serif; font-size:13px; outline:none; }
+input[type=text]:focus { border-color:#00A86B; }
+input[type=text]::placeholder { color:#4D6A94; }
+.fbtn { padding:6px 11px; font-size:12px; font-family:'Barlow Condensed',sans-serif; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; border:1px solid rgba(255,255,255,0.15); border-radius:6px; background:transparent; color:#8BA3CC; cursor:pointer; white-space:nowrap; }
+.fbtn.active { background:#00A86B; border-color:#00A86B; color:#fff; }
+.fbtn.danger { border-color:rgba(231,76,60,0.4); color:#e74c3c; }
 
-  .sticker-grid { display: flex; flex-wrap: wrap; gap: 5px; }
-  .stk { width: 46px; height: 46px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: #1A2F52; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; position: relative; overflow: hidden; -webkit-tap-highlight-color: transparent; transition: transform 0.1s, background 0.12s, border-color 0.12s; }
-  .stk:active { transform: scale(0.88); }
-  .stk.owned { background: #007A4D; border-color: #00A86B; }
-  .stk-star { position: absolute; top: 2px; right: 4px; font-size: 8px; color: #F5C518; display: none; }
-  .stk.owned .stk-star { display: block; }
-  .stk-num { font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 700; line-height: 1; color: #8BA3CC; }
-  .stk.owned .stk-num { color: #fff; }
-  .stk-code { font-size: 9px; line-height: 1; margin-top: 2px; color: #4D6A94; }
-  .stk.owned .stk-code { color: rgba(255,255,255,0.6); }
+/* MAIN */
+.main { max-width:700px; margin:0 auto; padding:14px 16px 80px; }
 
-  .empty { text-align: center; padding: 60px 20px; color: #4D6A94; font-size: 15px; }
+/* SECTIONS */
+.sec { margin-bottom:10px; border:1px solid rgba(255,255,255,0.08); border-radius:10px; overflow:hidden; }
+.sec-hdr { display:flex; align-items:center; gap:10px; padding:9px 13px; background:#1A2F52; cursor:pointer; user-select:none; }
+.sec.open .sec-hdr { background:#1F3660; }
+.sec-key { font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:1px; color:#F5C518; min-width:42px; }
+.sec-name { font-size:12px; color:#8BA3CC; flex:1; font-weight:500; }
+.sec-minibar { width:50px; height:3px; background:#0A1628; border-radius:3px; overflow:hidden; flex-shrink:0; }
+.sec-minifill { height:100%; background:#00A86B; border-radius:3px; }
+.sec-badge { font-family:'Barlow Condensed',sans-serif; font-size:12px; font-weight:700; padding:2px 8px; border-radius:999px; white-space:nowrap; background:#0F1F3D; color:#8BA3CC; border:1px solid rgba(255,255,255,0.08); }
+.sec-badge.done { background:rgba(0,168,107,0.2); color:#00A86B; border-color:rgba(0,168,107,0.4); }
+.sec-arrow { color:#4D6A94; font-size:11px; transition:transform 0.2s; display:inline-block; }
+.sec.open .sec-arrow { transform:rotate(90deg); }
+.sec-body { display:none; padding:11px 13px; background:#162647; }
+.sec.open .sec-body { display:block; }
 
-  .footer { position: fixed; bottom: 0; left: 0; right: 0; background: #0F1F3D; border-top: 1px solid rgba(255,255,255,0.07); padding: 10px 16px; padding-bottom: calc(10px + env(safe-area-inset-bottom)); text-align: center; font-size: 11px; color: #4D6A94; }
+/* STICKERS */
+.sticker-grid { display:flex; flex-wrap:wrap; gap:5px; }
+.stk { width:52px; height:52px; border-radius:8px; border:1px solid rgba(255,255,255,0.15); background:#1A2F52; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; position:relative; overflow:hidden; transition:transform 0.1s, background 0.12s, border-color 0.12s; user-select:none; }
+.stk:active { transform:scale(0.88); }
+.stk.q1 { background:#007A4D; border-color:#00A86B; }
+.stk.q2 { background:#005C8A; border-color:#0099DD; }
+.stk.q3 { background:#7A4D00; border-color:#F5A800; }
+.stk.q4 { background:#7A0000; border-color:#DD3333; }
+.stk-num { font-family:'Barlow Condensed',sans-serif; font-size:13px; font-weight:700; line-height:1; color:#8BA3CC; }
+.stk.q1 .stk-num,.stk.q2 .stk-num,.stk.q3 .stk-num,.stk.q4 .stk-num { color:#fff; }
+.stk-code { font-size:8px; line-height:1; margin-top:2px; color:#4D6A94; }
+.stk.q1 .stk-code,.stk.q2 .stk-code,.stk.q3 .stk-code,.stk.q4 .stk-code { color:rgba(255,255,255,0.6); }
+.stk-qty { position:absolute; top:2px; right:4px; font-size:9px; font-weight:700; font-family:'Barlow Condensed',sans-serif; }
+.stk.q1 .stk-qty { display:none; }
+.stk.q2 .stk-qty { color:#00CFFF; }
+.stk.q3 .stk-qty { color:#FFD700; }
+.stk.q4 .stk-qty { color:#FF6666; }
 
-  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 300; align-items: center; justify-content: center; padding: 24px; }
-  .modal-overlay.show { display: flex; }
-  .modal { background: #0F1F3D; border: 1px solid rgba(255,255,255,0.15); border-radius: 14px; padding: 28px 24px; max-width: 300px; width: 100%; animation: popin 0.2s ease; }
-  .modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 24px; color: #e74c3c; margin-bottom: 10px; letter-spacing: 1px; }
-  .modal-text { font-size: 14px; color: #8BA3CC; line-height: 1.6; margin-bottom: 24px; }
-  .modal-btns { display: flex; gap: 10px; }
-  .modal-btns button { flex: 1; padding: 11px; font-size: 14px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; border-radius: 8px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-  .modal-cancel  { border: 1px solid rgba(255,255,255,0.2); background: transparent; color: #8BA3CC; }
-  .modal-confirm { border: none; background: #e74c3c; color: #fff; }
+/* TROCAS */
+.trades-section { margin-bottom:20px; }
+.trades-title { font-family:'Bebas Neue',sans-serif; font-size:20px; color:#F5C518; letter-spacing:1px; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.08); }
+.friend-block { background:#0F1F3D; border:1px solid rgba(255,255,255,0.08); border-radius:10px; margin-bottom:10px; overflow:hidden; }
+.friend-hdr { display:flex; align-items:center; gap:10px; padding:10px 14px; cursor:pointer; }
+.friend-avatar { width:32px; height:32px; border-radius:50%; background:#1A2F52; border:1px solid rgba(255,255,255,0.15); display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue',sans-serif; font-size:14px; color:#F5C518; flex-shrink:0; }
+.friend-name { font-weight:600; font-size:14px; flex:1; }
+.friend-counts { font-size:12px; color:#8BA3CC; }
+.friend-body { display:none; padding:12px 14px; background:#162647; }
+.friend-block.open .friend-body { display:block; }
+.friend-block.open .friend-hdr { background:#1A2F52; }
+.trade-group { margin-bottom:14px; }
+.trade-group-title { font-size:11px; color:#8BA3CC; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px; }
+.trade-chips { display:flex; flex-wrap:wrap; gap:5px; }
+.chip { padding:4px 9px; border-radius:6px; font-family:'Barlow Condensed',sans-serif; font-size:12px; font-weight:700; }
+.chip.give { background:rgba(0,168,107,0.2); color:#00A86B; border:1px solid rgba(0,168,107,0.3); }
+.chip.need { background:rgba(0,153,221,0.2); color:#0099DD; border:1px solid rgba(0,153,221,0.3); }
+.no-trades { text-align:center; padding:40px 20px; color:#4D6A94; font-size:14px; }
 
-  .toast { position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%) translateY(10px); background: #007A4D; color: #fff; padding: 8px 18px; border-radius: 999px; font-size: 13px; font-weight: 600; z-index: 200; white-space: nowrap; box-shadow: 0 4px 20px rgba(0,0,0,0.4); opacity: 0; transition: opacity 0.2s, transform 0.2s; pointer-events: none; }
-  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+/* ADMIN */
+.admin-section { margin-bottom:24px; }
+.admin-title { font-family:'Bebas Neue',sans-serif; font-size:20px; color:#F5C518; letter-spacing:1px; margin-bottom:12px; }
+.user-list { display:flex; flex-direction:column; gap:8px; margin-bottom:20px; }
+.user-row { background:#0F1F3D; border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:10px 14px; display:flex; align-items:center; gap:10px; }
+.user-row-name { flex:1; font-weight:600; }
+.user-row-badge { font-size:11px; padding:2px 8px; border-radius:999px; background:rgba(245,197,24,0.15); color:#F5C518; border:1px solid rgba(245,197,24,0.3); }
+.btn-del { padding:4px 10px; font-size:11px; font-family:'Barlow Condensed',sans-serif; font-weight:700; border:1px solid rgba(231,76,60,0.4); border-radius:6px; background:transparent; color:#e74c3c; cursor:pointer; }
+.add-user-form { background:#0F1F3D; border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:16px; }
+.form-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+.form-row input { flex:1; min-width:120px; padding:8px 12px; background:#1A2F52; border:1px solid rgba(255,255,255,0.15); border-radius:6px; color:#F0F4FF; font-family:'Barlow',sans-serif; font-size:14px; outline:none; }
+.form-row input:focus { border-color:#00A86B; }
+.btn-add { padding:8px 16px; background:#00A86B; border:none; border-radius:6px; color:#fff; font-family:'Barlow Condensed',sans-serif; font-size:14px; font-weight:700; letter-spacing:0.5px; cursor:pointer; white-space:nowrap; }
 
-  @keyframes popin { from { opacity:0; transform:scale(0.9); } to { opacity:1; transform:scale(1); } }
+/* MODAL */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:300; align-items:center; justify-content:center; padding:24px; }
+.modal-overlay.show { display:flex; }
+.modal { background:#0F1F3D; border:1px solid rgba(255,255,255,0.15); border-radius:14px; padding:28px 24px; max-width:300px; width:100%; animation:popin 0.2s ease; }
+.modal-title { font-family:'Bebas Neue',sans-serif; font-size:24px; color:#e74c3c; margin-bottom:10px; letter-spacing:1px; }
+.modal-text { font-size:14px; color:#8BA3CC; line-height:1.6; margin-bottom:24px; }
+.modal-btns { display:flex; gap:10px; }
+.modal-btns button { flex:1; padding:11px; font-size:14px; font-family:'Barlow Condensed',sans-serif; font-weight:700; border-radius:8px; cursor:pointer; }
+.modal-cancel { border:1px solid rgba(255,255,255,0.2); background:transparent; color:#8BA3CC; }
+.modal-confirm { border:none; background:#e74c3c; color:#fff; }
+
+/* TOAST */
+.toast { position:fixed; bottom:60px; left:50%; transform:translateX(-50%) translateY(10px); background:#007A4D; color:#fff; padding:8px 18px; border-radius:999px; font-size:13px; font-weight:600; z-index:200; white-space:nowrap; box-shadow:0 4px 20px rgba(0,0,0,0.4); opacity:0; transition:opacity 0.2s, transform 0.2s; pointer-events:none; }
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+.footer { position:fixed; bottom:0; left:0; right:0; background:#0F1F3D; border-top:1px solid rgba(255,255,255,0.07); padding:10px 16px; padding-bottom:calc(10px + env(safe-area-inset-bottom)); text-align:center; font-size:11px; color:#4D6A94; }
+.empty { text-align:center; padding:60px 20px; color:#4D6A94; font-size:15px; }
+.loading { text-align:center; padding:60px 20px; color:#4D6A94; font-size:14px; }
+
+@keyframes popin { from{opacity:0;transform:scale(0.9)} to{opacity:1;transform:scale(1)} }
 </style>
 </head>
 <body>
 
-<div class="header">
-  <div class="header-inner">
-    <div class="header-top">
-      <div class="logo">Figurinhas <span>COPA 2026</span></div>
-      <div class="stats">
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Figurinhas 2026</div>
+    <div class="login-sub">Copa do Mundo FIFA</div>
+    <div class="field">
+      <label>Nickname</label>
+      <input type="text" id="login-nick" placeholder="seu apelido" autocomplete="username">
+    </div>
+    <div class="field">
+      <label>Senha</label>
+      <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn-login" onclick="doLogin()">Entrar</button>
+    <div class="login-error" id="login-error">Nickname ou senha incorretos</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-inner">
+      <div class="header-top">
+        <div class="logo">Figurinhas <span>COPA 2026</span></div>
+        <div class="user-badge">Olá, <strong id="user-name">-</strong></div>
+        <button class="btn-logout" onclick="doLogout()">Sair</button>
+      </div>
+      <div class="stats" id="stats-bar">
         <div class="stat"><strong id="s-owned">0</strong>coladas</div>
         <div class="stat"><strong id="s-miss">0</strong>faltam</div>
-        <div class="stat"><strong id="s-total">0</strong>total</div>
+        <div class="stat"><strong id="s-rep">0</strong>repetidas</div>
         <div class="stat gold"><strong id="s-pct">0%</strong></div>
       </div>
+      <div class="progress-track"><div class="progress-fill" id="prog"></div></div>
     </div>
-    <div class="progress-track"><div class="progress-fill" id="prog"></div></div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <div class="tabs-inner">
+      <div class="tab active" onclick="showTab('colecao',this)">Coleção</div>
+      <div class="tab" onclick="showTab('trocas',this)">Trocas</div>
+      <div class="tab" id="tab-admin" style="display:none" onclick="showTab('admin',this)">Admin</div>
+    </div>
+  </div>
+
+  <!-- COLEÇÃO -->
+  <div id="tab-colecao">
+    <div class="controls">
+      <div class="controls-inner">
+        <div class="search-wrap">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F0F4FF" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="search" placeholder="Buscar... (BRA, ARG...)">
+        </div>
+        <button class="fbtn active" id="f-all"     onclick="setFilter('all',this)">Todas</button>
+        <button class="fbtn"        id="f-owned"   onclick="setFilter('owned',this)">Tenho</button>
+        <button class="fbtn"        id="f-missing" onclick="setFilter('missing',this)">Faltam</button>
+        <button class="fbtn"        id="f-rep"     onclick="setFilter('rep',this)">Repetidas</button>
+        <button class="fbtn"        onclick="expandAll()">▼</button>
+        <button class="fbtn"        onclick="collapseAll()">▶</button>
+        <button class="fbtn danger" onclick="document.getElementById('modal').classList.add('show')">Reset</button>
+      </div>
+    </div>
+    <div class="main" id="main"><div class="loading">Carregando...</div></div>
+  </div>
+
+  <!-- TROCAS -->
+  <div id="tab-trocas" style="display:none">
+    <div class="main" id="trades-main"><div class="loading">Carregando trocas...</div></div>
+  </div>
+
+  <!-- ADMIN -->
+  <div id="tab-admin-panel" style="display:none">
+    <div class="main">
+      <div class="admin-section">
+        <div class="admin-title">Usuários</div>
+        <div class="user-list" id="user-list"></div>
+        <div class="add-user-form">
+          <div class="admin-title" style="font-size:16px;margin-bottom:12px;">Novo usuário</div>
+          <div class="form-row">
+            <input type="text" id="new-nick" placeholder="Nickname">
+            <input type="password" id="new-pass" placeholder="Senha">
+            <button class="btn-add" onclick="addUser()">Criar</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
-<div class="controls">
-  <div class="controls-inner">
-    <div class="search-wrap">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F0F4FF" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input type="text" id="search" placeholder="Buscar... (BRA, ARG...)">
-    </div>
-    <button class="btn active" id="btn-all"     onclick="setFilter('all',this)">Todas</button>
-    <button class="btn"        id="btn-owned"   onclick="setFilter('owned',this)">Tenho</button>
-    <button class="btn"        id="btn-missing" onclick="setFilter('missing',this)">Faltam</button>
-    <button class="btn"        onclick="expandAll()">▼ Tudo</button>
-    <button class="btn"        onclick="collapseAll()">▶ Fechar</button>
-    <button class="btn danger" onclick="document.getElementById('modal').classList.add('show')">Reset</button>
-  </div>
-</div>
-
-<div class="main" id="main"></div>
-
-<div class="footer">Copa do Mundo FIFA 2026 · Álbum de Figurinhas</div>
-
+<!-- MODAL RESET -->
 <div class="modal-overlay" id="modal" onclick="if(event.target===this)this.classList.remove('show')">
   <div class="modal">
     <div class="modal-title">Resetar álbum?</div>
-    <div class="modal-text">Todas as figurinhas marcadas serão apagadas. Essa ação não pode ser desfeita.</div>
+    <div class="modal-text">Todas as figurinhas serão zeradas. Não pode ser desfeito.</div>
     <div class="modal-btns">
-      <button class="modal-cancel"  onclick="document.getElementById('modal').classList.remove('show')">Cancelar</button>
+      <button class="modal-cancel" onclick="document.getElementById('modal').classList.remove('show')">Cancelar</button>
       <button class="modal-confirm" onclick="doReset()">Sim, resetar</button>
     </div>
   </div>
 </div>
 
+<div class="footer">Copa do Mundo FIFA 2026 · Álbum de Figurinhas</div>
 <div class="toast" id="toast"></div>
 
 <script>
+const SUPABASE_URL = 'https://ywvnrdoonouzvqddsbjq.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_lRvQn5evV-EZnMYIeCdXwg_IUquXbbe';
+
 const SECTIONS = [
-  { key:'FWC', label:'FIFA World Cup History', s:0, e:19 },
-  { key:'CC',  label:'Coca-Cola', s:1, e:14 },
-  { key:'MEX', label:'México · Grupo A', s:1, e:20 },
-  { key:'RSA', label:'África do Sul · Grupo A', s:1, e:20 },
-  { key:'KOR', label:'Coreia do Sul · Grupo A', s:1, e:20 },
-  { key:'CZE', label:'Rep. Tcheca · Grupo A', s:1, e:20 },
-  { key:'CAN', label:'Canadá · Grupo B', s:1, e:20 },
-  { key:'BIH', label:'Bósnia · Grupo B', s:1, e:20 },
-  { key:'QAT', label:'Catar · Grupo B', s:1, e:20 },
-  { key:'SUI', label:'Suíça · Grupo B', s:1, e:20 },
-  { key:'BRA', label:'Brasil · Grupo C', s:1, e:20 },
-  { key:'MAR', label:'Marrocos · Grupo C', s:1, e:20 },
-  { key:'HAI', label:'Haiti · Grupo C', s:1, e:20 },
-  { key:'SCO', label:'Escócia · Grupo C', s:1, e:20 },
-  { key:'USA', label:'Estados Unidos · Grupo D', s:1, e:20 },
-  { key:'PAR', label:'Paraguai · Grupo D', s:1, e:20 },
-  { key:'AUS', label:'Austrália · Grupo D', s:1, e:20 },
-  { key:'TUR', label:'Turquia · Grupo D', s:1, e:20 },
-  { key:'GER', label:'Alemanha · Grupo E', s:1, e:20 },
-  { key:'CUW', label:'Curaçao · Grupo E', s:1, e:20 },
-  { key:'CIV', label:'Costa do Marfim · Grupo E', s:1, e:20 },
-  { key:'ECU', label:'Equador · Grupo E', s:1, e:20 },
-  { key:'NED', label:'Holanda · Grupo F', s:1, e:20 },
-  { key:'JPN', label:'Japão · Grupo F', s:1, e:20 },
-  { key:'SWE', label:'Suécia · Grupo F', s:1, e:20 },
-  { key:'TUN', label:'Tunísia · Grupo F', s:1, e:20 },
-  { key:'BEL', label:'Bélgica · Grupo G', s:1, e:20 },
-  { key:'EGY', label:'Egito · Grupo G', s:1, e:20 },
-  { key:'IRN', label:'Irã · Grupo G', s:1, e:20 },
-  { key:'NZL', label:'Nova Zelândia · Grupo G', s:1, e:20 },
-  { key:'ESP', label:'Espanha · Grupo H', s:1, e:20 },
-  { key:'CPV', label:'Cabo Verde · Grupo H', s:1, e:20 },
-  { key:'KSA', label:'Arábia Saudita · Grupo H', s:1, e:20 },
-  { key:'URU', label:'Uruguai · Grupo H', s:1, e:20 },
-  { key:'FRA', label:'França · Grupo I', s:1, e:20 },
-  { key:'SEN', label:'Senegal · Grupo I', s:1, e:20 },
-  { key:'IRQ', label:'Iraque · Grupo I', s:1, e:20 },
-  { key:'NOR', label:'Noruega · Grupo I', s:1, e:20 },
-  { key:'ARG', label:'Argentina · Grupo J', s:1, e:20 },
-  { key:'ALG', label:'Argélia · Grupo J', s:1, e:20 },
-  { key:'AUT', label:'Áustria · Grupo J', s:1, e:20 },
-  { key:'JOR', label:'Jordânia · Grupo J', s:1, e:20 },
-  { key:'POR', label:'Portugal · Grupo K', s:1, e:20 },
-  { key:'COD', label:'Congo · Grupo K', s:1, e:20 },
-  { key:'UZB', label:'Uzbequistão · Grupo K', s:1, e:20 },
-  { key:'COL', label:'Colômbia · Grupo K', s:1, e:20 },
-  { key:'ENG', label:'Inglaterra · Grupo L', s:1, e:20 },
-  { key:'CRO', label:'Croácia · Grupo L', s:1, e:20 },
-  { key:'GHA', label:'Gana · Grupo L', s:1, e:20 },
-  { key:'PAN', label:'Panamá · Grupo L', s:1, e:20 },
+  {key:'FWC',label:'FIFA World Cup History',s:0,e:19},
+  {key:'CC', label:'Coca-Cola',s:1,e:14},
+  {key:'MEX',label:'México · Grupo A',s:1,e:20},
+  {key:'RSA',label:'África do Sul · Grupo A',s:1,e:20},
+  {key:'KOR',label:'Coreia do Sul · Grupo A',s:1,e:20},
+  {key:'CZE',label:'Rep. Tcheca · Grupo A',s:1,e:20},
+  {key:'CAN',label:'Canadá · Grupo B',s:1,e:20},
+  {key:'BIH',label:'Bósnia · Grupo B',s:1,e:20},
+  {key:'QAT',label:'Catar · Grupo B',s:1,e:20},
+  {key:'SUI',label:'Suíça · Grupo B',s:1,e:20},
+  {key:'BRA',label:'Brasil · Grupo C',s:1,e:20},
+  {key:'MAR',label:'Marrocos · Grupo C',s:1,e:20},
+  {key:'HAI',label:'Haiti · Grupo C',s:1,e:20},
+  {key:'SCO',label:'Escócia · Grupo C',s:1,e:20},
+  {key:'USA',label:'Estados Unidos · Grupo D',s:1,e:20},
+  {key:'PAR',label:'Paraguai · Grupo D',s:1,e:20},
+  {key:'AUS',label:'Austrália · Grupo D',s:1,e:20},
+  {key:'TUR',label:'Turquia · Grupo D',s:1,e:20},
+  {key:'GER',label:'Alemanha · Grupo E',s:1,e:20},
+  {key:'CUW',label:'Curaçao · Grupo E',s:1,e:20},
+  {key:'CIV',label:'Costa do Marfim · Grupo E',s:1,e:20},
+  {key:'ECU',label:'Equador · Grupo E',s:1,e:20},
+  {key:'NED',label:'Holanda · Grupo F',s:1,e:20},
+  {key:'JPN',label:'Japão · Grupo F',s:1,e:20},
+  {key:'SWE',label:'Suécia · Grupo F',s:1,e:20},
+  {key:'TUN',label:'Tunísia · Grupo F',s:1,e:20},
+  {key:'BEL',label:'Bélgica · Grupo G',s:1,e:20},
+  {key:'EGY',label:'Egito · Grupo G',s:1,e:20},
+  {key:'IRN',label:'Irã · Grupo G',s:1,e:20},
+  {key:'NZL',label:'Nova Zelândia · Grupo G',s:1,e:20},
+  {key:'ESP',label:'Espanha · Grupo H',s:1,e:20},
+  {key:'CPV',label:'Cabo Verde · Grupo H',s:1,e:20},
+  {key:'KSA',label:'Arábia Saudita · Grupo H',s:1,e:20},
+  {key:'URU',label:'Uruguai · Grupo H',s:1,e:20},
+  {key:'FRA',label:'França · Grupo I',s:1,e:20},
+  {key:'SEN',label:'Senegal · Grupo I',s:1,e:20},
+  {key:'IRQ',label:'Iraque · Grupo I',s:1,e:20},
+  {key:'NOR',label:'Noruega · Grupo I',s:1,e:20},
+  {key:'ARG',label:'Argentina · Grupo J',s:1,e:20},
+  {key:'ALG',label:'Argélia · Grupo J',s:1,e:20},
+  {key:'AUT',label:'Áustria · Grupo J',s:1,e:20},
+  {key:'JOR',label:'Jordânia · Grupo J',s:1,e:20},
+  {key:'POR',label:'Portugal · Grupo K',s:1,e:20},
+  {key:'COD',label:'Congo · Grupo K',s:1,e:20},
+  {key:'UZB',label:'Uzbequistão · Grupo K',s:1,e:20},
+  {key:'COL',label:'Colômbia · Grupo K',s:1,e:20},
+  {key:'ENG',label:'Inglaterra · Grupo L',s:1,e:20},
+  {key:'CRO',label:'Croácia · Grupo L',s:1,e:20},
+  {key:'GHA',label:'Gana · Grupo L',s:1,e:20},
+  {key:'PAN',label:'Panamá · Grupo L',s:1,e:20},
 ];
 
-let owned = {}, openSecs = {}, filter = 'all', toastTimer;
+// ---- STATE ----
+let currentUser = null;
+let collection = {}; // sticker_key -> quantity
+let allUsers = [];
+let allCollections = {}; // user_id -> {sticker_key: qty}
+let filter = 'all';
+let openSecs = {};
+let toastTimer;
+let longPressTimer;
 
-function load() {
-  try { owned    = JSON.parse(localStorage.getItem('copa26_owned') || '{}'); } catch(e) {}
-  try { openSecs = JSON.parse(localStorage.getItem('copa26_open')  || '{}'); } catch(e) {}
+// ---- API ----
+async function api(method, table, body, query='') {
+  const url = `${SUPABASE_URL}/rest/v1/${table}${query}`;
+  const res = await fetch(url, {
+    method,
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': method==='POST' ? 'return=representation' : 'return=representation'
+    },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  if (!res.ok) { const e = await res.text(); throw new Error(e); }
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
 }
-function saveOwned() { try { localStorage.setItem('copa26_owned', JSON.stringify(owned));    } catch(e) {} }
-function saveOpen()  { try { localStorage.setItem('copa26_open',  JSON.stringify(openSecs)); } catch(e) {} }
-function numStr(i)   { return String(i).padStart(2,'0'); }
 
+async function apiGet(table, query='') { return api('GET', table, null, query); }
+async function apiPost(table, body)    { return api('POST', table, body); }
+async function apiPatch(table, body, query) { return api('PATCH', table, body, query); }
+async function apiDelete(table, query) { return api('DELETE', table, null, query); }
+async function apiUpsert(table, body) {
+  const url = `${SUPABASE_URL}/rest/v1/${table}`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'resolution=merge-duplicates,return=representation'
+    },
+    body: JSON.stringify(body)
+  });
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
+// ---- LOGIN ----
+async function doLogin() {
+  const nick = document.getElementById('login-nick').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  if (!nick || !pass) return;
+  try {
+    const users = await apiGet('users', `?nickname=eq.${encodeURIComponent(nick)}&password=eq.${encodeURIComponent(pass)}`);
+    if (!users || users.length === 0) {
+      document.getElementById('login-error').style.display = 'block';
+      return;
+    }
+    currentUser = users[0];
+    localStorage.setItem('copa26_user', JSON.stringify(currentUser));
+    startApp();
+  } catch(e) {
+    document.getElementById('login-error').style.display = 'block';
+  }
+}
+
+document.getElementById('login-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+document.getElementById('login-nick').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('login-pass').focus(); });
+
+function doLogout() {
+  currentUser = null;
+  collection = {};
+  localStorage.removeItem('copa26_user');
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+// ---- INIT ----
+async function startApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('user-name').textContent = currentUser.nickname;
+  if (currentUser.is_admin) {
+    document.getElementById('tab-admin').style.display = 'block';
+  }
+  await loadCollection();
+  render();
+  // carregar coleções dos amigos em background
+  loadAllCollections();
+}
+
+async function loadCollection() {
+  try {
+    const rows = await apiGet('collection', `?user_id=eq.${currentUser.id}`);
+    collection = {};
+    (rows || []).forEach(r => { collection[r.sticker_key] = r.quantity; });
+  } catch(e) { console.error(e); }
+}
+
+async function loadAllCollections() {
+  try {
+    const users = await apiGet('users');
+    allUsers = users || [];
+    const rows = await apiGet('collection');
+    allCollections = {};
+    (rows || []).forEach(r => {
+      if (!allCollections[r.user_id]) allCollections[r.user_id] = {};
+      allCollections[r.user_id][r.sticker_key] = r.quantity;
+    });
+  } catch(e) { console.error(e); }
+}
+
+// ---- TOGGLE ----
+function numStr(i) { return String(i).padStart(2,'0'); }
+
+function onStkClick(key, i) {
+  const sk = key+'_'+i;
+  const cur = collection[sk] || 0;
+  const next = (cur + 1) % 5;
+  updateSticker(key, i, next);
+}
+
+function onStkLongPress(key, i) {
+  const sk = key+'_'+i;
+  if ((collection[sk]||0) === 0) return;
+  updateSticker(key, i, 0);
+  showToast('Figurinha zerada');
+}
+
+async function updateSticker(key, i, qty) {
+  const sk = key+'_'+i;
+  const prev = collection[sk] || 0;
+  collection[sk] = qty;
+  const el = document.getElementById('stk_'+sk);
+  if (el) refreshStkEl(el, qty, numStr(i), key);
+  updateSecBadge(key);
+  updateGlobalStats();
+  if (qty > 0 && prev === 0) showToast(key+numStr(i)+' colada! ✦');
+  // salvar no banco
+  try {
+    if (qty === 0) {
+      await apiDelete('collection', `?user_id=eq.${currentUser.id}&sticker_key=eq.${sk}`);
+      delete collection[sk];
+    } else {
+      await apiUpsert('collection', { user_id: currentUser.id, sticker_key: sk, quantity: qty, updated_at: new Date().toISOString() });
+    }
+  } catch(e) { console.error('Erro ao salvar:', e); }
+}
+
+function refreshStkEl(el, qty, num, key) {
+  el.className = 'stk' + (qty>0 ? ' q'+Math.min(qty,4) : '');
+  el.querySelector('.stk-qty').textContent = qty > 1 ? 'x'+qty : '';
+}
+
+// ---- RENDER ----
 function secStats(s) {
-  let c=0, t=0;
-  for (let i=s.s; i<=s.e; i++) { t++; if (owned[s.key+'_'+i]) c++; }
-  return {c,t};
+  let owned=0, reps=0, t=0;
+  for (let i=s.s; i<=s.e; i++) {
+    t++;
+    const q = collection[s.key+'_'+i]||0;
+    if (q>0) owned++;
+    if (q>1) reps += q-1;
+  }
+  return {owned,reps,t};
 }
 
 function updateGlobalStats() {
-  let own=0, tot=0;
-  SECTIONS.forEach(s => { const {c,t}=secStats(s); own+=c; tot+=t; });
+  let own=0, rep=0, tot=0;
+  SECTIONS.forEach(s => { const {owned,reps,t}=secStats(s); own+=owned; rep+=reps; tot+=t; });
   document.getElementById('s-owned').textContent = own;
   document.getElementById('s-miss').textContent  = tot-own;
-  document.getElementById('s-total').textContent = tot;
+  document.getElementById('s-rep').textContent   = rep;
   document.getElementById('s-pct').textContent   = tot ? Math.round(own/tot*100)+'%' : '0%';
   document.getElementById('prog').style.width    = tot ? (own/tot*100)+'%' : '0%';
 }
 
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
-}
-
-function toggle(key, i) {
-  const k = key+'_'+i;
-  const wasOwned = !!owned[k];
-  if (wasOwned) delete owned[k]; else owned[k] = 1;
-  saveOwned();
-  const el = document.getElementById('stk_'+k);
-  if (el) el.classList.toggle('owned', !!owned[k]);
-  updateSecBadge(key);
-  updateGlobalStats();
-  if (!wasOwned) showToast(key+numStr(i)+' colada! ✦');
-}
-
 function updateSecBadge(key) {
-  const s = SECTIONS.find(x=>x.key===key);
-  if (!s) return;
-  const {c,t} = secStats(s);
+  const s = SECTIONS.find(x=>x.key===key); if(!s) return;
+  const {owned,t} = secStats(s);
   const badge = document.getElementById('badge_'+key);
   const fill  = document.getElementById('fill_'+key);
-  if (badge) { badge.textContent=c+'/'+t; badge.className='sec-badge'+(c===t?' done':''); }
-  if (fill)  fill.style.width = Math.round(c/t*100)+'%';
-}
-
-function toggleSec(key) {
-  openSecs[key] = !openSecs[key];
-  saveOpen();
-  const el = document.getElementById('sec_'+key);
-  if (el) el.classList.toggle('open', !!openSecs[key]);
-}
-
-function setFilter(f, btn) {
-  filter = f;
-  document.querySelectorAll('.btn[id^=btn-]').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  render();
-}
-
-function expandAll() {
-  SECTIONS.forEach(s => { openSecs[s.key]=true; });
-  saveOpen();
-  document.querySelectorAll('.sec').forEach(el => el.classList.add('open'));
-}
-
-function collapseAll() {
-  SECTIONS.forEach(s => { openSecs[s.key]=false; });
-  saveOpen();
-  document.querySelectorAll('.sec').forEach(el => el.classList.remove('open'));
-}
-
-function doReset() {
-  owned = {}; saveOwned();
-  document.getElementById('modal').classList.remove('show');
-  render();
-  updateGlobalStats();
-  showToast('Álbum resetado');
+  if (badge) { badge.textContent=owned+'/'+t; badge.className='sec-badge'+(owned===t?' done':''); }
+  if (fill)  fill.style.width=Math.round(owned/t*100)+'%';
 }
 
 function render() {
@@ -295,17 +511,25 @@ function render() {
   let html = '';
   SECTIONS.forEach(s => {
     if (q && !s.key.toLowerCase().includes(q) && !s.label.toLowerCase().includes(q)) return;
-    const {c,t} = secStats(s);
+    const {owned,t} = secStats(s);
     const isOpen = !!openSecs[s.key];
-    const pct = Math.round(c/t*100);
-    let stickersHtml='', count=0;
+    const pct = Math.round(owned/t*100);
+    let stHtml='', count=0;
     for (let i=s.s; i<=s.e; i++) {
-      const k=s.key+'_'+i, isOwned=!!owned[k];
-      if (filter==='owned'   && !isOwned) continue;
-      if (filter==='missing' &&  isOwned) continue;
-      stickersHtml += `<div class="stk${isOwned?' owned':''}" id="stk_${k}" onclick="toggle('${s.key}',${i})">
-        <span class="stk-star">✦</span>
-        <span class="stk-num">${numStr(i)}</span>
+      const sk=s.key+'_'+i;
+      const qty=collection[sk]||0;
+      if (filter==='owned'   && qty===0) continue;
+      if (filter==='missing' && qty>0)   continue;
+      if (filter==='rep'     && qty<2)   continue;
+      const num=numStr(i);
+      const qcls = qty>0 ? ' q'+Math.min(qty,4) : '';
+      const qshow = qty>1 ? 'x'+qty : '';
+      stHtml += `<div class="stk${qcls}" id="stk_${sk}"
+        ontouchstart="startLong('${s.key}',${i})" ontouchend="clearLong()" ontouchmove="clearLong()"
+        onmousedown="startLong('${s.key}',${i})" onmouseup="clearLong()" onmouseleave="clearLong()"
+        onclick="onStkClick('${s.key}',${i})">
+        <span class="stk-qty">${qshow}</span>
+        <span class="stk-num">${num}</span>
         <span class="stk-code">${s.key}</span>
       </div>`;
       count++;
@@ -316,25 +540,192 @@ function render() {
         <span class="sec-key">${s.key}</span>
         <span class="sec-name">${s.label}</span>
         <div class="sec-minibar"><div class="sec-minifill" id="fill_${s.key}" style="width:${pct}%"></div></div>
-        <span class="sec-badge${c===t?' done':''}" id="badge_${s.key}">${c}/${t}</span>
+        <span class="sec-badge${owned===t?' done':''}" id="badge_${s.key}">${owned}/${t}</span>
         <span class="sec-arrow">▶</span>
       </div>
-      <div class="sec-body"><div class="sticker-grid">${stickersHtml}</div></div>
+      <div class="sec-body"><div class="sticker-grid">${stHtml}</div></div>
     </div>`;
   });
   main.innerHTML = html || '<div class="empty">Nenhuma seção encontrada</div>';
   updateGlobalStats();
 }
 
-document.getElementById('search').addEventListener('input', render);
+// long press
+function startLong(key, i) {
+  longPressTimer = setTimeout(() => { onStkLongPress(key, i); }, 600);
+}
+function clearLong() { clearTimeout(longPressTimer); }
 
-// Registra o Service Worker para funcionamento offline
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js');
+function setFilter(f, btn) {
+  filter=f;
+  document.querySelectorAll('.fbtn[id^=f-]').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+function toggleSec(key) {
+  openSecs[key]=!openSecs[key];
+  document.getElementById('sec_'+key)?.classList.toggle('open',!!openSecs[key]);
+}
+function expandAll()  { SECTIONS.forEach(s=>{openSecs[s.key]=true;}); document.querySelectorAll('.sec').forEach(e=>e.classList.add('open')); }
+function collapseAll(){ SECTIONS.forEach(s=>{openSecs[s.key]=false;}); document.querySelectorAll('.sec').forEach(e=>e.classList.remove('open')); }
+
+async function doReset() {
+  document.getElementById('modal').classList.remove('show');
+  try {
+    await apiDelete('collection',`?user_id=eq.${currentUser.id}`);
+    collection={};
+    render();
+    showToast('Álbum resetado');
+  } catch(e) { showToast('Erro ao resetar'); }
 }
 
-load();
-render();
+document.getElementById('search').addEventListener('input', render);
+
+// ---- TROCAS ----
+function renderTrades() {
+  const main = document.getElementById('trades-main');
+  const friends = allUsers.filter(u => u.id !== currentUser.id);
+  if (friends.length === 0) {
+    main.innerHTML = '<div class="no-trades">Nenhum amigo cadastrado ainda.<br>O admin pode adicionar usuários na aba Admin.</div>';
+    return;
+  }
+
+  // minhas repetidas: sticker_key -> qty extra
+  const myReps = {};
+  const myNeeds = new Set();
+  SECTIONS.forEach(s => {
+    for (let i=s.s; i<=s.e; i++) {
+      const sk=s.key+'_'+i;
+      const q=collection[sk]||0;
+      if (q>1) myReps[sk]=q-1;
+      if (q===0) myNeeds.add(sk);
+    }
+  });
+
+  let html = '';
+
+  // --- O que posso dar / o que preciso ---
+  html += `<div class="trades-section"><div class="trades-title">Minhas Trocas</div>`;
+
+  friends.forEach(friend => {
+    const fc = allCollections[friend.id] || {};
+    // figurinhas que ele precisa E eu tenho repetida
+    const canGive = Object.keys(myReps).filter(sk => !fc[sk] || fc[sk]===0);
+    // figurinhas que eu preciso E ele tem repetida
+    const canGet  = Object.keys(fc).filter(sk => myNeeds.has(sk) && fc[sk]>1);
+
+    const initials = friend.nickname.substring(0,2).toUpperCase();
+    const total = canGive.length + canGet.length;
+
+    html += `<div class="friend-block" id="fb_${friend.id}">
+      <div class="friend-hdr" onclick="toggleFriend('${friend.id}')">
+        <div class="friend-avatar">${initials}</div>
+        <div class="friend-name">${friend.nickname}</div>
+        <div class="friend-counts">
+          ${canGive.length>0?`<span style="color:#00A86B">▲${canGive.length} dar</span> `:''}
+          ${canGet.length>0?`<span style="color:#0099DD">▼${canGet.length} pegar</span>`:''}
+          ${total===0?'<span style="color:#4D6A94">sem trocas</span>':''}
+        </div>
+      </div>
+      <div class="friend-body">`;
+
+    if (canGive.length > 0) {
+      html += `<div class="trade-group">
+        <div class="trade-group-title">Posso dar para ${friend.nickname}</div>
+        <div class="trade-chips">
+          ${canGive.map(sk=>`<span class="chip give">${sk.replace('_','')}</span>`).join('')}
+        </div>
+      </div>`;
+    }
+    if (canGet.length > 0) {
+      html += `<div class="trade-group">
+        <div class="trade-group-title">${friend.nickname} pode me dar</div>
+        <div class="trade-chips">
+          ${canGet.map(sk=>`<span class="chip need">${sk.replace('_','')}</span>`).join('')}
+        </div>
+      </div>`;
+    }
+    if (canGive.length===0 && canGet.length===0) {
+      html += `<div style="color:#4D6A94;font-size:13px;padding:8px 0">Nenhuma troca possível com ${friend.nickname} no momento.</div>`;
+    }
+    html += `</div></div>`;
+  });
+
+  html += `</div>`;
+  main.innerHTML = html;
+}
+
+function toggleFriend(id) {
+  document.getElementById('fb_'+id)?.classList.toggle('open');
+}
+
+// ---- ADMIN ----
+async function renderAdmin() {
+  const list = document.getElementById('user-list');
+  try {
+    const users = await apiGet('users');
+    allUsers = users || [];
+    list.innerHTML = allUsers.map(u => `
+      <div class="user-row">
+        <span class="user-row-name">${u.nickname}</span>
+        ${u.is_admin ? '<span class="user-row-badge">Admin</span>' : ''}
+        ${!u.is_admin ? `<button class="btn-del" onclick="delUser('${u.id}','${u.nickname}')">Remover</button>` : ''}
+      </div>
+    `).join('');
+  } catch(e) { list.innerHTML = '<div style="color:#e74c3c">Erro ao carregar usuários</div>'; }
+}
+
+async function addUser() {
+  const nick = document.getElementById('new-nick').value.trim();
+  const pass = document.getElementById('new-pass').value;
+  if (!nick || !pass) { showToast('Preencha nickname e senha'); return; }
+  try {
+    await apiPost('users', { nickname: nick, password: pass, is_admin: false });
+    document.getElementById('new-nick').value='';
+    document.getElementById('new-pass').value='';
+    showToast(nick+' criado!');
+    renderAdmin();
+  } catch(e) { showToast('Erro: nickname já existe?'); }
+}
+
+async function delUser(id, nick) {
+  if (!confirm(`Remover ${nick}?`)) return;
+  try {
+    await apiDelete('users', `?id=eq.${id}`);
+    showToast(nick+' removido');
+    renderAdmin();
+  } catch(e) { showToast('Erro ao remover'); }
+}
+
+// ---- TABS ----
+function showTab(tab, el) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-colecao').style.display        = tab==='colecao' ? 'block':'none';
+  document.getElementById('tab-trocas').style.display         = tab==='trocas'  ? 'block':'none';
+  document.getElementById('tab-admin-panel').style.display    = tab==='admin'   ? 'block':'none';
+  // sticky controls só na coleção
+  document.querySelector('.controls').style.display = tab==='colecao' ? 'block':'none';
+  if (tab==='trocas') { loadAllCollections().then(renderTrades); }
+  if (tab==='admin')  { renderAdmin(); }
+}
+
+// ---- TOAST ----
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),1800);
+}
+
+// ---- AUTO LOGIN ----
+window.addEventListener('load', () => {
+  const saved = localStorage.getItem('copa26_user');
+  if (saved) { try { currentUser=JSON.parse(saved); startApp(); } catch(e) {} }
+});
+
+// Service Worker
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 </script>
 </body>
 </html>
