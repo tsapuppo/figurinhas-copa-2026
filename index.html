@@ -338,7 +338,7 @@ async function api(method, table, body, query='') {
       'apikey': SUPABASE_KEY,
       'Authorization': `Bearer ${SUPABASE_KEY}`,
       'Content-Type': 'application/json',
-      'Prefer': method==='POST' ? 'return=representation' : 'return=representation'
+      'Prefer': 'return=representation'
     },
     body: body ? JSON.stringify(body) : undefined
   });
@@ -359,7 +359,7 @@ async function apiUpsert(table, body) {
       'apikey': SUPABASE_KEY,
       'Authorization': `Bearer ${SUPABASE_KEY}`,
       'Content-Type': 'application/json',
-      'Prefer': 'resolution=merge-duplicates,return=representation'
+      'Prefer': 'resolution=merge-duplicates'
     },
     body: JSON.stringify(body)
   });
@@ -458,13 +458,13 @@ async function updateSticker(key, i, qty) {
   updateSecBadge(key);
   updateGlobalStats();
   if (qty > 0 && prev === 0) showToast(key+numStr(i)+' colada! ✦');
-  // salvar no banco
+  // salvar no banco: delete sempre, depois insert se qty > 0
   try {
+    await apiDelete('collection', `?user_id=eq.${currentUser.id}&sticker_key=eq.${sk}`);
     if (qty === 0) {
-      await apiDelete('collection', `?user_id=eq.${currentUser.id}&sticker_key=eq.${sk}`);
       delete collection[sk];
     } else {
-      await apiUpsert('collection', { user_id: currentUser.id, sticker_key: sk, quantity: qty, updated_at: new Date().toISOString() });
+      await apiPost('collection', { user_id: currentUser.id, sticker_key: sk, quantity: qty, updated_at: new Date().toISOString() });
     }
   } catch(e) { console.error('Erro ao salvar:', e); }
 }
