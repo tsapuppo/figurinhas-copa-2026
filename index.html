@@ -561,6 +561,8 @@ function toggleFriend(id){document.getElementById("fb_"+id)?.classList.toggle("o
 function renderCommunity(){
   const main=document.getElementById("community-main");
   const sorted=[...allUsers].sort((a,b)=>{
+    if(a.id===currentUser.id)return -1;
+    if(b.id===currentUser.id)return 1;
     const na=(a.full_name||a.nickname).toLowerCase();
     const nb=(b.full_name||b.nickname).toLowerCase();
     return na.localeCompare(nb,"pt");
