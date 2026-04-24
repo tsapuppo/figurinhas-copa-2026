@@ -144,6 +144,7 @@ body{font-family:"Barlow",sans-serif;background:#0A1628;color:#F0F4FF;min-height
 .user-row-sub{font-size:11px;color:#4D6A94}
 .user-row-badge{font-size:11px;padding:2px 8px;border-radius:999px;background:rgba(245,197,24,0.15);color:#F5C518;border:1px solid rgba(245,197,24,0.3)}
 .btn-del{padding:4px 10px;font-size:11px;font-family:"Barlow Condensed",sans-serif;font-weight:700;border:1px solid rgba(231,76,60,0.4);border-radius:6px;background:transparent;color:#e74c3c;cursor:pointer}
+.user-edit-inline{border:1px solid rgba(255,255,255,0.08);border-top:none;border-radius:0 0 8px 8px;overflow:hidden;margin-bottom:8px}
 .add-user-form{background:#0F1F3D;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:16px}
 .add-user-form .admin-title{font-size:16px;margin-bottom:14px}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
@@ -709,15 +710,58 @@ async function renderAdmin(){
   try{
     allUsers=await apiGet("users")||[];
     list.innerHTML=allUsers.map(u=>`
-      <div class="user-row">
+      <div class="user-row" id="urow_${u.id}">
         <div style="flex:1">
           <div class="user-row-name">${u.full_name||u.nickname}</div>
           <div class="user-row-sub">@${u.nickname} ${u.city?"· "+u.city:""}</div>
         </div>
-        ${u.is_admin?"<span class=\"user-row-badge\">Admin</span>":""}
+        ${u.is_admin?'<span class="user-row-badge">Admin</span>':""}
+        <button class="profile-edit-btn" onclick="toggleEditUser('${u.id}')">Editar</button>
         ${!u.is_admin?`<button class="btn-del" onclick="delUser('${u.id}','${u.nickname}')">Remover</button>`:""}
+      </div>
+      <div class="user-edit-inline" id="uedit_${u.id}" style="display:none">
+        <div class="edit-card" style="border-radius:0;border-top:none;margin-bottom:0">
+          <div class="edit-field"><label>Nickname (não editável)</label><input type="text" value="${u.nickname}" disabled></div>
+          <div class="edit-field"><label>Nome completo</label><input type="text" id="ef_fullname_${u.id}" value="${u.full_name||""}"></div>
+          <div class="edit-field"><label>Cidade</label><input type="text" id="ef_city_${u.id}" value="${u.city||""}"></div>
+          <div class="edit-field"><label>WhatsApp (só números)</label><input type="text" id="ef_wpp_${u.id}" value="${u.whatsapp||""}" placeholder="11999998888"></div>
+          <div class="edit-field"><label>Nova senha (deixe em branco para manter)</label><input type="password" id="ef_pass_${u.id}" placeholder="••••••••"></div>
+          <div style="display:flex;gap:8px;margin-top:4px">
+            <button class="btn-save" onclick="saveEditUser('${u.id}')">Salvar</button>
+            <button class="btn-cancel-edit" onclick="toggleEditUser('${u.id}')">Cancelar</button>
+          </div>
+        </div>
       </div>`).join("");
-  }catch(e){list.innerHTML="<div style=\"color:#e74c3c\">Erro ao carregar</div>";}
+  }catch(e){list.innerHTML='<div style="color:#e74c3c">Erro ao carregar</div>';}
+}
+
+function toggleEditUser(id){
+  const el=document.getElementById("uedit_"+id);
+  if(!el)return;
+  el.style.display=el.style.display==="none"?"block":"none";
+}
+
+async function saveEditUser(id){
+  const fullname=document.getElementById("ef_fullname_"+id).value.trim();
+  const city=document.getElementById("ef_city_"+id).value.trim();
+  const wpp=document.getElementById("ef_wpp_"+id).value.trim().replace(/\D/g,"");
+  const pass=document.getElementById("ef_pass_"+id).value;
+  const body={full_name:fullname,city,whatsapp:wpp};
+  if(pass)body.password=pass;
+  try{
+    await apiPatch("users",body,`?id=eq.${id}`);
+    // atualizar allUsers local
+    const idx=allUsers.findIndex(u=>u.id===id);
+    if(idx>=0){allUsers[idx]={...allUsers[idx],...body};}
+    // se for o próprio admin logado, atualizar currentUser
+    if(currentUser.id===id){
+      currentUser={...currentUser,...body};
+      localStorage.setItem("copa26_user",JSON.stringify(currentUser));
+    }
+    showToast("Usuário atualizado!");
+    toggleEditUser(id);
+    renderAdmin();
+  }catch(e){showToast("Erro ao salvar");}
 }
 
 async function addUser(){
