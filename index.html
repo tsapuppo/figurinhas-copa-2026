@@ -365,11 +365,21 @@ async function startApp(){
 }
 
 async function loadCollection(){
+  // carrega local primeiro (instantâneo)
+  loadLocal();
+  // depois sincroniza com o cloud
   try{
     const rows=await apiGet("collection",`?user_id=eq.${currentUser.id}`);
-    collection={};
-    (rows||[]).forEach(r=>{collection[r.sticker_key]=r.quantity;});
-  }catch(e){console.error(e);}
+    const cloudCol={};
+    (rows||[]).forEach(r=>{cloudCol[r.sticker_key]=r.quantity;});
+    // se cloud tem dados, usa cloud (fonte da verdade)
+    if(Object.keys(cloudCol).length>0||Object.keys(collection).length===0){
+      collection=cloudCol;
+      saveLocal();
+    }
+  }catch(e){
+    console.error("Offline, usando dados locais",e);
+  }
 }
 
 async function loadAllData(){
@@ -429,10 +439,12 @@ function onStkLongPress(key,i){
   showToast("Figurinha zerada");
 }
 
-async function updateSticker(key,i,qty){
+function updateSticker(key,i,qty){
   const sk=key+"_"+i;
   const prev=collection[sk]||0;
-  collection[sk]=qty;
+  if(qty===0) delete collection[sk]; else collection[sk]=qty;
+  // salvar localmente
+  saveLocal();
   const el=document.getElementById("stk_"+sk);
   if(el){
     el.className="stk"+(qty>0?" q"+Math.min(qty,4):"");
@@ -441,11 +453,36 @@ async function updateSticker(key,i,qty){
   updateSecBadge(key);
   updateGlobalStats();
   if(qty>0&&prev===0)showToast(key+numStr(i)+" colada! ✦");
+  // marcar como dirty para sync
+  window._dirty=true;
+}
+
+function saveLocal(){
+  try{localStorage.setItem("copa26_col_"+currentUser.id,JSON.stringify(collection));}catch(e){}
+}
+
+function loadLocal(){
   try{
-    await apiDelete("collection",`?user_id=eq.${currentUser.id}&sticker_key=eq.${sk}`);
-    if(qty===0){delete collection[sk];}
-    else{await apiPost("collection",{user_id:currentUser.id,sticker_key:sk,quantity:qty,updated_at:new Date().toISOString()});}
-  }catch(e){console.error("Erro ao salvar:",e);}
+    const d=localStorage.getItem("copa26_col_"+currentUser.id);
+    if(d)collection=JSON.parse(d);
+  }catch(e){}
+}
+
+async function syncToCloud(){
+  if(!currentUser||!window._dirty)return;
+  window._dirty=false;
+  try{
+    // apaga tudo do usuário e insere de uma vez
+    await apiDelete("collection",`?user_id=eq.${currentUser.id}`);
+    const rows=Object.entries(collection)
+      .filter(([,qty])=>qty>0)
+      .map(([sk,qty])=>({user_id:currentUser.id,sticker_key:sk,quantity:qty,updated_at:new Date().toISOString()}));
+    if(rows.length>0) await apiPost("collection",rows);
+    console.log("Sync OK -",rows.length,"figurinhas");
+  }catch(e){
+    window._dirty=true; // retry next time
+    console.error("Sync erro:",e);
+  }
 }
 
 function startLong(key,i){longPressTimer=setTimeout(()=>onStkLongPress(key,i),600);}
@@ -508,8 +545,12 @@ function collapseAll(){SECTIONS.forEach(s=>{openSecs[s.key]=false;});document.qu
 
 async function doReset(){
   document.getElementById("modal").classList.remove("show");
-  try{await apiDelete("collection",`?user_id=eq.${currentUser.id}`);collection={};render();showToast("Álbum resetado");}
-  catch(e){showToast("Erro ao resetar");}
+  collection={};
+  saveLocal();
+  window._dirty=true;
+  render();
+  showToast("Álbum resetado");
+  syncToCloud();
 }
 document.getElementById("search").addEventListener("input",render);
 
@@ -830,6 +871,15 @@ window.addEventListener("load",()=>{
 });
 
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js");
+
+// Sync ao fechar/sair da página
+window.addEventListener("beforeunload",()=>{ if(window._dirty)syncToCloud(); });
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="hidden"&&window._dirty)syncToCloud(); });
+
+// Sync automático a cada 60 segundos como segurança
+setInterval(()=>{ if(window._dirty)syncToCloud(); },60000);
+
+window._dirty=false;
 </script>
 </body>
 </html>
