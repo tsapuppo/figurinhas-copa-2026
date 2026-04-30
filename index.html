@@ -288,6 +288,14 @@ const SKEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 const SECTIONS=[
   {key:"FWC",label:"FIFA World Cup History",s:0,e:19},
   {key:"CC",label:"Coca-Cola",s:1,e:14},
+  {key:"MCD",label:"McDonald's",s:1,e:1,custom:[
+    "MEX","RSA","KOR","CZE","CAN","BIH","QAT","SUI",
+    "BRA","MAR","HAI","SCO","USA","PAR","AUS","TUR",
+    "GER","CUW","CIV","ECU","NED","JPN","SWE","TUN",
+    "BEL","EGY","IRN","NZL","ESP","CPV","KSA","URU",
+    "FRA","SEN","IRQ","NOR","ARG","ALG","AUT","JOR",
+    "POR","COD","UZB","COL","ENG","CRO","GHA","PAN"
+  ]},
   {key:"MEX",label:"México · Grupo A",s:1,e:20},{key:"RSA",label:"África do Sul · Grupo A",s:1,e:20},
   {key:"KOR",label:"Coreia do Sul · Grupo A",s:1,e:20},{key:"CZE",label:"Rep. Tcheca · Grupo A",s:1,e:20},
   {key:"CAN",label:"Canadá · Grupo B",s:1,e:20},{key:"BIH",label:"Bósnia · Grupo B",s:1,e:20},
@@ -396,14 +404,24 @@ async function loadAllData(){
 
 function numStr(i){return String(i).padStart(2,"0");}
 
+// Retorna lista de {sk, label} para uma seção
+function getStickerList(s){
+  if(s.custom){
+    return s.custom.map(team=>({sk:team+"_13",label:"13",code:team}));
+  }
+  const list=[];
+  for(let i=s.s;i<=s.e;i++) list.push({sk:s.key+"_"+i,label:numStr(i),code:s.key});
+  return list;
+}
+
 function secStats(s){
   let owned=0,reps=0,t=0;
-  for(let i=s.s;i<=s.e;i++){
+  getStickerList(s).forEach(({sk})=>{
     t++;
-    const q=collection[s.key+"_"+i]||0;
+    const q=collection[sk]||0;
     if(q>0)owned++;
     if(q>1)reps+=q-1;
-  }
+  });
   return{owned,reps,t};
 }
 
@@ -423,7 +441,7 @@ function updateSecBadge(key){
   const badge=document.getElementById("badge_"+key);
   const fill=document.getElementById("fill_"+key);
   if(badge){badge.textContent=owned+"/"+t;badge.className="sec-badge"+(owned===t?" done":"");}
-  if(fill)fill.style.width=Math.round(owned/t*100)+"%";
+  if(fill)fill.style.width=(t?Math.round(owned/t*100):0)+"%";
 }
 
 function onStkClick(key,i){
@@ -488,6 +506,35 @@ async function syncToCloud(){
 function startLong(key,i){longPressTimer=setTimeout(()=>onStkLongPress(key,i),600);}
 function clearLong(){clearTimeout(longPressTimer);}
 
+// handlers por sk direto (para seções custom como MCD)
+function onStkClickSk(sk){
+  const cur=collection[sk]||0;
+  const next=(cur+1)%5;
+  updateStickerBySk(sk,next);
+}
+function startLongSk(sk){longPressTimer=setTimeout(()=>{
+  if((collection[sk]||0)===0)return;
+  updateStickerBySk(sk,0);
+  showToast("Figurinha zerada");
+},600);}
+
+function updateStickerBySk(sk,qty){
+  const prev=collection[sk]||0;
+  if(qty===0) delete collection[sk]; else collection[sk]=qty;
+  saveLocal();
+  const el=document.getElementById("stk_"+sk);
+  if(el){
+    el.className="stk"+(qty>0?" q"+Math.min(qty,4):"");
+    el.querySelector(".stk-qty").textContent=qty>1?"x"+qty:"";
+  }
+  // atualizar badge da seção correta
+  const sec=SECTIONS.find(s=>getStickerList(s).some(x=>x.sk===sk));
+  if(sec)updateSecBadge(sec.key);
+  updateGlobalStats();
+  if(qty>0&&prev===0)showToast(sk.replace("_","")+" colada! ✦");
+  window._dirty=true;
+}
+
 function render(){
   const q=document.getElementById("search").value.toLowerCase().trim();
   const main=document.getElementById("main");
@@ -498,22 +545,22 @@ function render(){
     const isOpen=!!openSecs[s.key];
     const pct=Math.round(owned/t*100);
     let stHtml="",count=0;
-    for(let i=s.s;i<=s.e;i++){
-      const sk=s.key+"_"+i,qty=collection[sk]||0;
-      if(filter==="owned"&&qty===0)continue;
-      if(filter==="missing"&&qty>0)continue;
-      if(filter==="rep"&&qty<2)continue;
-      const num=numStr(i),qcls=qty>0?" q"+Math.min(qty,4):"",qshow=qty>1?"x"+qty:"";
+    getStickerList(s).forEach(({sk,label,code})=>{
+      const qty=collection[sk]||0;
+      if(filter==="owned"&&qty===0)return;
+      if(filter==="missing"&&qty>0)return;
+      if(filter==="rep"&&qty<2)return;
+      const qcls=qty>0?" q"+Math.min(qty,4):"",qshow=qty>1?"x"+qty:"";
       stHtml+=`<div class="stk${qcls}" id="stk_${sk}"
-        ontouchstart="startLong('${s.key}',${i})" ontouchend="clearLong()" ontouchmove="clearLong()"
-        onmousedown="startLong('${s.key}',${i})" onmouseup="clearLong()" onmouseleave="clearLong()"
-        onclick="onStkClick('${s.key}',${i})">
+        ontouchstart="startLongSk('${sk}')" ontouchend="clearLong()" ontouchmove="clearLong()"
+        onmousedown="startLongSk('${sk}')" onmouseup="clearLong()" onmouseleave="clearLong()"
+        onclick="onStkClickSk('${sk}')">
         <span class="stk-qty">${qshow}</span>
-        <span class="stk-num">${num}</span>
-        <span class="stk-code">${s.key}</span>
+        <span class="stk-num">${label}</span>
+        <span class="stk-code">${code}</span>
       </div>`;
       count++;
-    }
+    });
     if(count===0&&filter!=="all")return;
     html+=`<div class="sec${isOpen?" open":""}" id="sec_${s.key}">
       <div class="sec-hdr" onclick="toggleSec('${s.key}')">
@@ -561,11 +608,11 @@ function renderTrades(){
   if(!friends.length){main.innerHTML="<div class=\"no-trades\">Nenhum amigo cadastrado ainda.</div>";return;}
   const myReps={},myNeeds=new Set();
   SECTIONS.forEach(s=>{
-    for(let i=s.s;i<=s.e;i++){
-      const sk=s.key+"_"+i,q=collection[sk]||0;
+    getStickerList(s).forEach(({sk})=>{
+      const q=collection[sk]||0;
       if(q>1)myReps[sk]=q-1;
       if(q===0)myNeeds.add(sk);
-    }
+    });
   });
   let html="";
   friends.forEach(friend=>{
@@ -617,7 +664,7 @@ function renderCommunity(){
     const displayName=u.full_name||u.nickname;
     const uc=allCollections[u.id]||{};
     let owned=0,tot=0;
-    SECTIONS.forEach(s=>{for(let i=s.s;i<=s.e;i++){tot++;if(uc[s.key+"_"+i]>0)owned++;}});
+    SECTIONS.forEach(s=>{getStickerList(s).forEach(({sk})=>{tot++;if(uc[sk]>0)owned++;});});
     const pct=tot?Math.round(owned/tot*100):0;
     html+=`<div class="community-card" onclick="openPerfil('${u.id}')">
       <div class="c-avatar">${initials}</div>
@@ -649,18 +696,18 @@ function openPerfil(userId){
   const myReps={},myNeeds=new Set();
   if(!isMe){
     SECTIONS.forEach(s=>{
-      for(let i=s.s;i<=s.e;i++){
-        const sk=s.key+"_"+i,q=myCol[sk]||0;
+      getStickerList(s).forEach(({sk})=>{
+        const q=myCol[sk]||0;
         if(q>1)myReps[sk]=q-1;
         if(q===0)myNeeds.add(sk);
-      }
+      });
     });
   }
   const canGive=isMe?[]:Object.keys(myReps).filter(sk=>!(uc[sk]&&uc[sk]>0));
   const canGet=isMe?[]:Object.keys(uc).filter(sk=>myNeeds.has(sk)&&uc[sk]>1);
   const uReps=[];
   if(isMe){
-    SECTIONS.forEach(s=>{for(let i=s.s;i<=s.e;i++){const sk=s.key+"_"+i,q=uc[sk]||0;if(q>1)uReps.push(sk);}});
+    SECTIONS.forEach(s=>{getStickerList(s).forEach(({sk})=>{const q=uc[sk]||0;if(q>1)uReps.push(sk);});});
   }
 
   const initials=(user.full_name||user.nickname).substring(0,2).toUpperCase();
