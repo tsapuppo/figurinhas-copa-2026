@@ -224,6 +224,7 @@ body{font-family:"Barlow",sans-serif;background:#0A1628;color:#F0F4FF;min-height
         <button class="fbtn" id="f-rep" onclick="setFilter('rep',this)">Repetidas</button>
         <button class="fbtn" onclick="expandAll()">▼</button>
         <button class="fbtn" onclick="collapseAll()">▶</button>
+        <button class="fbtn" onclick="exportReport()" title="Exportar relatório">⬇ TXT</button>
         <button class="fbtn danger" onclick="document.getElementById('modal').classList.add('show')">Reset</button>
       </div>
     </div>
@@ -375,18 +376,25 @@ async function startApp(){
 async function loadCollection(){
   // carrega local primeiro (instantâneo)
   loadLocal();
-  // depois sincroniza com o cloud
+  // tenta buscar do Supabase
   try{
     const rows=await apiGet("collection",`?user_id=eq.${currentUser.id}`);
+    if(!rows) return; // falhou, mantém local
     const cloudCol={};
     (rows||[]).forEach(r=>{cloudCol[r.sticker_key]=r.quantity;});
-    // se cloud tem dados, usa cloud (fonte da verdade)
-    if(Object.keys(cloudCol).length>0||Object.keys(collection).length===0){
+    // só sobrescreve se o cloud retornou algo válido
+    if(Object.keys(cloudCol).length>0){
       collection=cloudCol;
       saveLocal();
     }
+    // se cloud veio vazio mas local tem dados, mantém local e agenda sync
+    else if(Object.keys(collection).length>0){
+      console.log("Cloud vazio, mantendo dados locais");
+      window._dirty=true;
+    }
   }catch(e){
-    console.error("Offline, usando dados locais",e);
+    console.error("Offline, mantendo dados locais:",e);
+    // não mexe em nada, usa o que tem no localStorage
   }
 }
 
@@ -904,6 +912,55 @@ function fixSticky(){
   if(controls&&controls.style.display!=="none")controls.style.top=(hh+tabs.offsetHeight)+"px";
 }
 window.addEventListener("resize",fixSticky);
+
+function exportReport(){
+  const filterNames={"all":"Todas","owned":"Tenho","missing":"Faltam","rep":"Repetidas"};
+  const now=new Date();
+  const dateStr=now.toLocaleDateString("pt-BR")+" às "+now.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+  let lines=[];
+  lines.push("FIGURINHAS COPA 2026 - Relatório");
+  lines.push("Gerado em: "+dateStr);
+  lines.push("Usuário: "+currentUser.nickname);
+  lines.push("Filtro: "+filterNames[filter]);
+  lines.push("");
+
+  let total=0;
+  SECTIONS.forEach(s=>{
+    const stickers=[];
+    getStickerList(s).forEach(({sk,label,code})=>{
+      const qty=collection[sk]||0;
+      if(filter==="owned"  && qty===0) return;
+      if(filter==="missing"&& qty>0)  return;
+      if(filter==="rep"    && qty<2)  return;
+      if(filter==="all"    && qty===0) return;
+      const tag=code+label+(qty>1?" (x"+qty+")":"");
+      stickers.push(tag);
+      total++;
+    });
+    if(stickers.length>0){
+      lines.push(s.key+" - "+s.label+":");
+      lines.push("  "+stickers.join(", "));
+      lines.push("");
+    }
+  });
+
+  if(total===0){
+    showToast("Nenhuma figurinha para exportar");
+    return;
+  }
+
+  lines.push("─────────────────────────────");
+  lines.push("Total: "+total+" figurinha"+(total>1?"s":""));
+
+  const blob=new Blob([lines.join("\n")],{type:"text/plain;charset=utf-8"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;
+  a.download="figurinhas-"+filterNames[filter].toLowerCase()+"-"+currentUser.nickname+".txt";
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast("Relatório exportado!");
+}
 
 function showToast(msg){
   const t=document.getElementById("toast");
