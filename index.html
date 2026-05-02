@@ -201,6 +201,9 @@ body{font-family:"Barlow",sans-serif;background:#0A1628;color:#F0F4FF;min-height
     </div>
   </div>
 
+  <div id="offline-banner" style="display:none;background:#B71C1C;color:#fff;text-align:center;padding:7px 16px;font-size:13px;font-weight:600;position:sticky;top:0;z-index:101">
+    ⚠️ Supabase offline — progresso salvo localmente. <a href="https://supabase.com" target="_blank" style="color:#FFD0D0;text-decoration:underline">Reativar agora</a>
+  </div>
   <div class="tabs" id="tabs-bar">
     <div class="tabs-inner">
       <div class="tab active" onclick="showTab('colecao',this)">Coleção</div>
@@ -296,7 +299,7 @@ const SECTIONS=[
     "BEL","EGY","IRN","NZL","ESP","CPV","KSA","URU",
     "FRA","SEN","IRQ","NOR","ARG","ALG","AUT","JOR",
     "POR","COD","UZB","COL","ENG","CRO","GHA","PAN"
-  ]},
+  ].map(t=>({sk:"MCD_"+t,label:t,code:"MCD"}))},
   {key:"MEX",label:"México · Grupo A",s:1,e:20},{key:"RSA",label:"África do Sul · Grupo A",s:1,e:20},
   {key:"KOR",label:"Coreia do Sul · Grupo A",s:1,e:20},{key:"CZE",label:"Rep. Tcheca · Grupo A",s:1,e:20},
   {key:"CAN",label:"Canadá · Grupo B",s:1,e:20},{key:"BIH",label:"Bósnia · Grupo B",s:1,e:20},
@@ -412,11 +415,13 @@ async function loadAllData(){
 
 function numStr(i){return String(i).padStart(2,"0");}
 
-// Retorna lista de {sk, label} para uma seção
+// Retorna lista de {sk, label, code} para uma seção
 function getStickerList(s){
-  if(s.custom){
-    return s.custom.map(team=>({sk:team+"_13",label:"13",code:team}));
+  // seção com lista custom já resolvida (ex: MCD)
+  if(s.custom && s.custom.length>0 && typeof s.custom[0]==="object"){
+    return s.custom;
   }
+  // seção normal
   const list=[];
   for(let i=s.s;i<=s.e;i++) list.push({sk:s.key+"_"+i,label:numStr(i),code:s.key});
   return list;
@@ -497,6 +502,73 @@ function loadLocal(){
 async function syncToCloud(){
   if(!currentUser||!window._dirty)return;
   window._dirty=false;
+
+// ---- MONITORAMENTO SUPABASE (só admin) ----
+let _supabaseOnline=true;
+
+async function checkSupabase(){
+  if(!currentUser||!currentUser.is_admin)return;
+  try{
+    const r=await fetch(`${SURL}/rest/v1/users?limit=1`,{
+      headers:{"apikey":SKEY,"Authorization":"Bearer "+SKEY},
+      signal:AbortSignal.timeout(5000)
+    });
+    if(r.ok){
+      if(!_supabaseOnline){
+        // voltou online
+        _supabaseOnline=true;
+        document.getElementById("offline-banner").style.display="none";
+        showToast("✅ Supabase voltou online!");
+        if(window._dirty)syncToCloud();
+      }
+    } else {
+      setSupabaseOffline();
+    }
+  }catch(e){
+    setSupabaseOffline();
+  }
+}
+
+function setSupabaseOffline(){
+  if(_supabaseOnline){
+    _supabaseOnline=false;
+    document.getElementById("offline-banner").style.display="block";
+    fixSticky();
+    // notificação no celular
+    sendPushNotification(
+      "⚠️ Supabase offline",
+      "O banco de dados pausou. Acesse supabase.com para reativar."
+    );
+  }
+}
+
+async function requestNotificationPermission(){
+  if(!currentUser||!currentUser.is_admin)return;
+  if(!("Notification" in window))return;
+  if(Notification.permission==="default"){
+    await Notification.requestPermission();
+  }
+}
+
+function sendPushNotification(title, body){
+  if(!("Notification" in window))return;
+  if(Notification.permission!=="granted")return;
+  new Notification(title,{
+    body,
+    icon:"icon.png",
+    badge:"icon.png",
+    tag:"supabase-offline", // evita duplicar
+  });
+}
+
+// pedir permissão ao admin ao fazer login
+// e checar a cada 5 minutos
+function startMonitoring(){
+  if(!currentUser||!currentUser.is_admin)return;
+  requestNotificationPermission();
+  checkSupabase();
+  setInterval(checkSupabase, 5*60*1000);
+}
   try{
     // apaga tudo do usuário e insere de uma vez
     await apiDelete("collection",`?user_id=eq.${currentUser.id}`);
@@ -984,6 +1056,73 @@ document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==
 setInterval(()=>{ if(window._dirty)syncToCloud(); },60000);
 
 window._dirty=false;
+
+// ---- MONITORAMENTO SUPABASE (só admin) ----
+let _supabaseOnline=true;
+
+async function checkSupabase(){
+  if(!currentUser||!currentUser.is_admin)return;
+  try{
+    const r=await fetch(`${SURL}/rest/v1/users?limit=1`,{
+      headers:{"apikey":SKEY,"Authorization":"Bearer "+SKEY},
+      signal:AbortSignal.timeout(5000)
+    });
+    if(r.ok){
+      if(!_supabaseOnline){
+        // voltou online
+        _supabaseOnline=true;
+        document.getElementById("offline-banner").style.display="none";
+        showToast("✅ Supabase voltou online!");
+        if(window._dirty)syncToCloud();
+      }
+    } else {
+      setSupabaseOffline();
+    }
+  }catch(e){
+    setSupabaseOffline();
+  }
+}
+
+function setSupabaseOffline(){
+  if(_supabaseOnline){
+    _supabaseOnline=false;
+    document.getElementById("offline-banner").style.display="block";
+    fixSticky();
+    // notificação no celular
+    sendPushNotification(
+      "⚠️ Supabase offline",
+      "O banco de dados pausou. Acesse supabase.com para reativar."
+    );
+  }
+}
+
+async function requestNotificationPermission(){
+  if(!currentUser||!currentUser.is_admin)return;
+  if(!("Notification" in window))return;
+  if(Notification.permission==="default"){
+    await Notification.requestPermission();
+  }
+}
+
+function sendPushNotification(title, body){
+  if(!("Notification" in window))return;
+  if(Notification.permission!=="granted")return;
+  new Notification(title,{
+    body,
+    icon:"icon.png",
+    badge:"icon.png",
+    tag:"supabase-offline", // evita duplicar
+  });
+}
+
+// pedir permissão ao admin ao fazer login
+// e checar a cada 5 minutos
+function startMonitoring(){
+  if(!currentUser||!currentUser.is_admin)return;
+  requestNotificationPermission();
+  checkSupabase();
+  setInterval(checkSupabase, 5*60*1000);
+}
 </script>
 </body>
 </html>
