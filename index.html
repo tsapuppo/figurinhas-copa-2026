@@ -744,7 +744,9 @@ function renderCommunity(){
     const displayName=u.full_name||u.nickname;
     const uc=allCollections[u.id]||{};
     let owned=0,tot=0;
-    SECTIONS.forEach(s=>{getStickerList(s).forEach(({sk})=>{tot++;if(uc[sk]>0)owned++;});});
+    // usar coleção local para o usuário atual (mais atualizada)
+    const col = (u.id===currentUser.id) ? collection : uc;
+    SECTIONS.forEach(s=>{getStickerList(s).forEach(({sk})=>{tot++;if(col[sk]>0)owned++;});});
     const pct=tot?Math.round(owned/tot*100):0;
     html+=`<div class="community-card" onclick="openPerfil('${u.id}')">
       <div class="c-avatar">${initials}</div>
