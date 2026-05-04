@@ -377,28 +377,25 @@ async function startApp(){
 }
 
 async function loadCollection(){
-  // carrega local primeiro (instantâneo)
-  loadLocal();
-  // tenta buscar do Supabase
+  // Supabase é sempre a fonte da verdade ao abrir o app
   try{
     const rows=await apiGet("collection",`?user_id=eq.${currentUser.id}`);
-    if(!rows) return; // falhou, mantém local
-    const cloudCol={};
-    (rows||[]).forEach(r=>{cloudCol[r.sticker_key]=r.quantity;});
-    // só sobrescreve se o cloud retornou algo válido
-    if(Object.keys(cloudCol).length>0){
-      collection=cloudCol;
-      saveLocal();
-    }
-    // se cloud veio vazio mas local tem dados, mantém local e agenda sync
-    else if(Object.keys(collection).length>0){
-      console.log("Cloud vazio, mantendo dados locais");
-      window._dirty=true;
+    if(rows){
+      collection={};
+      (rows||[]).forEach(r=>{collection[r.sticker_key]=r.quantity;});
+      saveLocal(); // atualiza cache local com o que veio do cloud
+      console.log("Coleção carregada do Supabase:",Object.keys(collection).length,"figurinhas");
+    } else {
+      // se falhou, usa local como fallback
+      loadLocal();
+      console.log("Supabase indisponível, usando local");
     }
   }catch(e){
-    console.error("Offline, mantendo dados locais:",e);
-    // não mexe em nada, usa o que tem no localStorage
+    // offline: usa local como fallback, sem marcar dirty
+    loadLocal();
+    console.error("Offline, usando dados locais:",e);
   }
+  window._dirty=false; // resetar dirty ao carregar
 }
 
 async function loadAllData(){
