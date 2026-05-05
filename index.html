@@ -1070,7 +1070,12 @@ window.addEventListener("load",async()=>{
   }
 });
 
-if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js");
+// Desregistrar qualquer service worker antigo que possa estar cacheando dados
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.getRegistrations().then(regs=>{
+    regs.forEach(reg=>reg.unregister());
+  });
+}
 
 window._dirty=false;
 </script>
