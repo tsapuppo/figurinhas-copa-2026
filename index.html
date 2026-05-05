@@ -394,12 +394,15 @@ async function loadCollection(){
 async function loadAllData(){
   try{
     allUsers=await apiGet("users")||[];
-    const rows=await apiGet("collection")||[];
+    // busca TODA a collection sem cache, direto do Supabase
+    const rows=await apiFetch("GET","collection",null,"?select=user_id,sticker_key,quantity&order=user_id")||[];
     allCollections={};
     rows.forEach(r=>{
       if(!allCollections[r.user_id])allCollections[r.user_id]={};
-      allCollections[r.user_id][r.sticker_key]=r.quantity;
+      if(r.quantity>0) allCollections[r.user_id][r.sticker_key]=r.quantity;
     });
+    // sempre usar coleção local para o usuário atual (mais atualizada)
+    allCollections[currentUser.id]=collection;
   }catch(e){console.error(e);}
 }
 
@@ -719,8 +722,7 @@ function renderCommunity(){
     const uc=allCollections[u.id]||{};
     let owned=0,tot=0;
     // usar coleção local para o usuário atual (mais atualizada)
-    const col = (u.id===currentUser.id) ? collection : uc;
-    SECTIONS.forEach(s=>{getStickerList(s).forEach(({sk})=>{tot++;if(col[sk]>0)owned++;});});
+    SECTIONS.forEach(s=>{getStickerList(s).forEach(({sk})=>{tot++;if(uc[sk]>0)owned++;});});
     const pct=tot?Math.round(owned/tot*100):0;
     html+=`<div class="community-card" onclick="openPerfil('${u.id}')">
       <div class="c-avatar">${initials}</div>
@@ -944,18 +946,8 @@ function showTab(tab,el){
   document.getElementById("tab-perfil").style.display="none";
   document.getElementById("tab-admin-panel").style.display=tab==="admin"?"block":"none";
   document.getElementById("controls-bar").style.display=tab==="colecao"?"block":"none";
-  if(tab==="trocas"){loadAllData().then(()=>{
-    // atualizar allCollections com dados locais do usuário atual
-    if(!allCollections[currentUser.id]) allCollections[currentUser.id]={};
-    allCollections[currentUser.id]=collection;
-    renderTrades();
-  });}
-  if(tab==="comunidade"){loadAllData().then(()=>{
-    // atualizar allCollections com dados locais do usuário atual
-    if(!allCollections[currentUser.id]) allCollections[currentUser.id]={};
-    allCollections[currentUser.id]=collection;
-    renderCommunity();
-  });}
+  if(tab==="trocas"){loadAllData().then(renderTrades);}
+  if(tab==="comunidade"){loadAllData().then(renderCommunity);}
   if(tab==="admin")renderAdmin();
   fixSticky();
 }
