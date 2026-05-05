@@ -1027,9 +1027,26 @@ function showToast(msg){
   toastTimer=setTimeout(()=>t.classList.remove("show"),1800);
 }
 
-window.addEventListener("load",()=>{
+window.addEventListener("load",async()=>{
   const saved=localStorage.getItem("copa26_user");
-  if(saved){try{currentUser=JSON.parse(saved);startApp();}catch(e){}}
+  if(saved){
+    try{
+      const u=JSON.parse(saved);
+      // revalidar usuario no Supabase para garantir ID correto
+      const fresh=await apiGet("users",`?nickname=eq.${encodeURIComponent(u.nickname)}&password=eq.${encodeURIComponent(u.password)}`);
+      if(fresh&&fresh.length>0){
+        currentUser=fresh[0];
+        localStorage.setItem("copa26_user",JSON.stringify(currentUser));
+        startApp();
+      } else {
+        // usuario nao encontrado, forcar login
+        localStorage.removeItem("copa26_user");
+      }
+    }catch(e){
+      // se falhar revalidacao, usa o salvo mesmo
+      try{currentUser=JSON.parse(saved);startApp();}catch(e2){}
+    }
+  }
 });
 
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js");
