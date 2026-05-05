@@ -944,8 +944,18 @@ function showTab(tab,el){
   document.getElementById("tab-perfil").style.display="none";
   document.getElementById("tab-admin-panel").style.display=tab==="admin"?"block":"none";
   document.getElementById("controls-bar").style.display=tab==="colecao"?"block":"none";
-  if(tab==="trocas"){loadAllData().then(renderTrades);}
-  if(tab==="comunidade"){loadAllData().then(renderCommunity);}
+  if(tab==="trocas"){loadAllData().then(()=>{
+    // atualizar allCollections com dados locais do usuário atual
+    if(!allCollections[currentUser.id]) allCollections[currentUser.id]={};
+    allCollections[currentUser.id]=collection;
+    renderTrades();
+  });}
+  if(tab==="comunidade"){loadAllData().then(()=>{
+    // atualizar allCollections com dados locais do usuário atual
+    if(!allCollections[currentUser.id]) allCollections[currentUser.id]={};
+    allCollections[currentUser.id]=collection;
+    renderCommunity();
+  });}
   if(tab==="admin")renderAdmin();
   fixSticky();
 }
