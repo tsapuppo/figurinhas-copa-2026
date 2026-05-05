@@ -330,7 +330,15 @@ let currentUser=null,collection={},allUsers=[],allCollections={},filter="all",op
 
 async function apiFetch(method,table,body,query=""){
   const r=await fetch(`${SURL}/rest/v1/${table}${query}`,{
-    method,headers:{"apikey":SKEY,"Authorization":"Bearer "+SKEY,"Content-Type":"application/json","Prefer":"return=representation"},
+    method,
+    cache:"no-store",
+    headers:{
+      "apikey":SKEY,
+      "Authorization":"Bearer "+SKEY,
+      "Content-Type":"application/json",
+      "Prefer":"return=representation",
+      "Cache-Control":"no-cache"
+    },
     body:body?JSON.stringify(body):undefined
   });
   const t=await r.text();
@@ -395,7 +403,8 @@ async function loadAllData(){
   try{
     allUsers=await apiGet("users")||[];
     // busca TODA a collection sem cache, direto do Supabase
-    const rows=await apiFetch("GET","collection",null,"?select=user_id,sticker_key,quantity&order=user_id")||[];
+    // limit=10000 para evitar paginação (padrão é 1000)
+    const rows=await apiFetch("GET","collection",null,"?select=user_id,sticker_key,quantity&order=user_id&limit=10000")||[];
     allCollections={};
     rows.forEach(r=>{
       if(!allCollections[r.user_id])allCollections[r.user_id]={};
