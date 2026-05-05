@@ -416,8 +416,6 @@ async function loadAllData(){
       if(!allCollections[r.user_id])allCollections[r.user_id]={};
       if(r.quantity>0) allCollections[r.user_id][r.sticker_key]=r.quantity;
     });
-    // sempre usar coleção local para o usuário atual (mais atualizada)
-    allCollections[currentUser.id]=collection;
   }catch(e){console.error(e);}
 }
 
