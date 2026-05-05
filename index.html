@@ -377,25 +377,18 @@ async function startApp(){
 }
 
 async function loadCollection(){
-  // Supabase é sempre a fonte da verdade ao abrir o app
+  // Supabase é a única fonte da verdade
   try{
     const rows=await apiGet("collection",`?user_id=eq.${currentUser.id}`);
-    if(rows){
-      collection={};
-      (rows||[]).forEach(r=>{collection[r.sticker_key]=r.quantity;});
-      saveLocal(); // atualiza cache local com o que veio do cloud
-      console.log("Coleção carregada do Supabase:",Object.keys(collection).length,"figurinhas");
-    } else {
-      // se falhou, usa local como fallback
-      loadLocal();
-      console.log("Supabase indisponível, usando local");
-    }
+    collection={};
+    (rows||[]).forEach(r=>{
+      if(r.quantity>0) collection[r.sticker_key]=r.quantity;
+    });
+    console.log("Coleção carregada:",Object.keys(collection).length,"figurinhas");
   }catch(e){
-    // offline: usa local como fallback, sem marcar dirty
-    loadLocal();
-    console.error("Offline, usando dados locais:",e);
+    console.error("Erro ao carregar coleção:",e);
+    showToast("⚠️ Erro ao carregar — verifique sua conexão");
   }
-  window._dirty=false; // resetar dirty ao carregar
 }
 
 async function loadAllData(){
@@ -471,8 +464,6 @@ function updateSticker(key,i,qty){
   const sk=key+"_"+i;
   const prev=collection[sk]||0;
   if(qty===0) delete collection[sk]; else collection[sk]=qty;
-  // salvar localmente
-  saveLocal();
   const el=document.getElementById("stk_"+sk);
   if(el){
     el.className="stk"+(qty>0?" q"+Math.min(qty,4):"");
@@ -481,37 +472,37 @@ function updateSticker(key,i,qty){
   updateSecBadge(key);
   updateGlobalStats();
   if(qty>0&&prev===0)showToast(key+numStr(i)+" colada! ✦");
-  // marcar como dirty para sync
-  window._dirty=true;
+  // salvar direto no Supabase com debounce
+  saveStickerCloud(sk, qty);
 }
 
-function saveLocal(){
-  try{localStorage.setItem("copa26_col_"+currentUser.id,JSON.stringify(collection));}catch(e){}
+// ---- SYNC DIRETO NO SUPABASE COM DEBOUNCE ----
+// Sem localStorage. Cada clique agenda um save em 2s.
+// Se clicar de novo antes dos 2s, cancela e reagenda.
+let _saveTimers={}; // sk -> timer
+
+async function saveStickerCloud(sk, qty){
+  // cancela timer anterior para esse sticker
+  if(_saveTimers[sk]) clearTimeout(_saveTimers[sk]);
+  // agenda save em 2 segundos
+  _saveTimers[sk] = setTimeout(async ()=>{
+    delete _saveTimers[sk];
+    try{
+      await apiDelete("collection",`?user_id=eq.${currentUser.id}&sticker_key=eq.${sk}`);
+      if(qty>0){
+        await apiPost("collection",{user_id:currentUser.id,sticker_key:sk,quantity:qty,updated_at:new Date().toISOString()});
+      }
+    }catch(e){
+      console.error("Erro ao salvar",sk,e);
+      showToast("⚠️ Erro ao salvar — tente novamente");
+    }
+  }, 2000);
 }
 
-function loadLocal(){
-  try{
-    const d=localStorage.getItem("copa26_col_"+currentUser.id);
-    if(d)collection=JSON.parse(d);
-  }catch(e){}
-}
-
-async function syncToCloud(){
-  if(!currentUser||!window._dirty)return;
-  window._dirty=false;
-  try{
-    // apaga tudo do usuário e insere de uma vez
-    await apiDelete("collection",`?user_id=eq.${currentUser.id}`);
-    const rows=Object.entries(collection)
-      .filter(([,qty])=>qty>0)
-      .map(([sk,qty])=>({user_id:currentUser.id,sticker_key:sk,quantity:qty,updated_at:new Date().toISOString()}));
-    if(rows.length>0) await apiPost("collection",rows);
-    console.log("Sync OK -",rows.length,"figurinhas");
-  }catch(e){
-    window._dirty=true;
-    console.error("Sync erro:",e);
-  }
-}
+// mantém por compatibilidade mas não faz nada
+function saveLocal(){}
+function loadLocal(){}
+async function syncToCloud(){}
 
 // ---- MONITORAMENTO SUPABASE (só admin) ----
 let _supabaseOnline=true;
@@ -584,18 +575,16 @@ function startLongSk(sk){longPressTimer=setTimeout(()=>{
 function updateStickerBySk(sk,qty){
   const prev=collection[sk]||0;
   if(qty===0) delete collection[sk]; else collection[sk]=qty;
-  saveLocal();
   const el=document.getElementById("stk_"+sk);
   if(el){
     el.className="stk"+(qty>0?" q"+Math.min(qty,4):"");
     el.querySelector(".stk-qty").textContent=qty>1?"x"+qty:"";
   }
-  // atualizar badge da seção correta
   const sec=SECTIONS.find(s=>getStickerList(s).some(x=>x.sk===sk));
   if(sec)updateSecBadge(sec.key);
   updateGlobalStats();
   if(qty>0&&prev===0)showToast(sk.replace("_","")+" colada! ✦");
-  window._dirty=true;
+  saveStickerCloud(sk, qty);
 }
 
 function render(){
@@ -655,12 +644,14 @@ function collapseAll(){SECTIONS.forEach(s=>{openSecs[s.key]=false;});document.qu
 
 async function doReset(){
   document.getElementById("modal").classList.remove("show");
-  collection={};
-  saveLocal();
-  window._dirty=true;
-  render();
-  showToast("Álbum resetado");
-  syncToCloud();
+  try{
+    await apiDelete("collection",`?user_id=eq.${currentUser.id}`);
+    collection={};
+    render();
+    showToast("Álbum resetado");
+  }catch(e){
+    showToast("Erro ao resetar — tente novamente");
+  }
 }
 document.getElementById("search").addEventListener("input",render);
 
@@ -1032,13 +1023,6 @@ window.addEventListener("load",()=>{
 });
 
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js");
-
-// Sync ao fechar/sair da página
-window.addEventListener("beforeunload",()=>{ if(window._dirty)syncToCloud(); });
-document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="hidden"&&window._dirty)syncToCloud(); });
-
-// Sync automático a cada 60 segundos como segurança
-setInterval(()=>{ if(window._dirty)syncToCloud(); },60000);
 
 window._dirty=false;
 </script>
