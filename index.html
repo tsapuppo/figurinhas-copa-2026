@@ -33,6 +33,7 @@ body{font-family:"Barlow",sans-serif;background:#0A1628;color:#F0F4FF;min-height
 .user-badge{background:#1A2F52;border:1px solid rgba(255,255,255,0.1);border-radius:999px;padding:3px 10px;font-size:12px;color:#8BA3CC;display:flex;align-items:center;gap:5px}
 .user-badge strong{color:#F0F4FF}
 .btn-logout{margin-left:auto;padding:4px 10px;font-size:11px;font-family:"Barlow Condensed",sans-serif;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;border:1px solid rgba(255,255,255,0.15);border-radius:6px;background:transparent;color:#8BA3CC;cursor:pointer}
+.btn-sync{padding:4px 10px;font-size:11px;font-family:"Barlow Condensed",sans-serif;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;border:1px solid rgba(0,168,107,0.4);border-radius:6px;background:transparent;color:#00A86B;cursor:pointer}
 .stats{display:flex;gap:5px;flex-wrap:wrap;padding:4px 0 6px}
 .stat{background:#1A2F52;border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:3px 9px;font-size:11px;color:#8BA3CC;display:flex;align-items:center;gap:4px}
 .stat strong{color:#F0F4FF;font-weight:600;font-size:13px}
@@ -189,6 +190,7 @@ body{font-family:"Barlow",sans-serif;background:#0A1628;color:#F0F4FF;min-height
       <div class="header-top">
         <div class="logo">Figurinhas <span>COPA 2026</span></div>
         <div class="user-badge">Olá, <strong id="user-name">-</strong></div>
+        <button class="btn-sync" id="btn-sync" onclick="forceSyncAll()" title="Sincronizar com servidor">↑ Sync</button>
         <button class="btn-logout" onclick="doLogout()">Sair</button>
       </div>
       <div class="stats">
@@ -486,6 +488,24 @@ function updateSticker(key,i,qty){
   if(qty>0&&prev===0)showToast(key+numStr(i)+" colada! ✦");
   // salvar direto no Supabase com debounce
   saveStickerCloud(sk, qty);
+}
+
+// ---- SYNC FORÇADO COMPLETO ----
+async function forceSyncAll(){
+  const btn=document.getElementById("btn-sync");
+  if(btn){btn.textContent="↑ ...";btn.disabled=true;}
+  try{
+    await apiDelete("collection",`?user_id=eq.${currentUser.id}`);
+    const rows=Object.entries(collection)
+      .filter(([,qty])=>qty>0)
+      .map(([sk,qty])=>({user_id:currentUser.id,sticker_key:sk,quantity:qty,updated_at:new Date().toISOString()}));
+    if(rows.length>0) await apiPost("collection",rows);
+    showToast("✅ Sincronizado! "+rows.length+" figurinhas salvas");
+  }catch(e){
+    showToast("⚠️ Erro ao sincronizar — tente novamente");
+  }finally{
+    if(btn){btn.textContent="↑ Sync";btn.disabled=false;}
+  }
 }
 
 // ---- SYNC DIRETO NO SUPABASE COM DEBOUNCE ----
