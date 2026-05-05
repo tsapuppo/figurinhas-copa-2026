@@ -404,9 +404,13 @@ async function loadCollection(){
 async function loadAllData(){
   try{
     allUsers=await apiGet("users")||[];
-    // busca TODA a collection sem cache, direto do Supabase
-    // limit=10000 para evitar paginação (padrão é 1000)
-    const rows=await apiFetch("GET","collection",null,"?select=user_id,sticker_key,quantity&order=user_id&limit=10000")||[];
+    // busca TODA a collection em partes para evitar limite do Supabase
+    let rows=[], offset=0, chunk;
+    do {
+      chunk=await apiFetch("GET","collection",null,`?select=user_id,sticker_key,quantity&order=user_id&limit=1000&offset=${offset}`)||[];
+      rows=[...rows,...chunk];
+      offset+=1000;
+    } while(chunk.length===1000);
     allCollections={};
     rows.forEach(r=>{
       if(!allCollections[r.user_id])allCollections[r.user_id]={};
