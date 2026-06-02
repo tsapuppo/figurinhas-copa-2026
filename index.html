@@ -501,10 +501,15 @@ async function forceSyncAll(){
     const rows=Object.entries(collection)
       .filter(([,qty])=>qty>0)
       .map(([sk,qty])=>({user_id:currentUser.id,sticker_key:sk,quantity:qty,updated_at:new Date().toISOString()}));
-    if(rows.length>0) await apiPost("collection",rows);
+    // inserir em lotes de 500 para evitar limite do Supabase
+    const chunkSize=500;
+    for(let i=0;i<rows.length;i+=chunkSize){
+      await apiPost("collection",rows.slice(i,i+chunkSize));
+    }
     showToast("✅ Sincronizado! "+rows.length+" figurinhas salvas");
   }catch(e){
     showToast("⚠️ Erro ao sincronizar — tente novamente");
+    console.error(e);
   }finally{
     if(btn){btn.textContent="↑ Sync";btn.disabled=false;}
   }
@@ -516,19 +521,23 @@ async function forceSyncAll(){
 let _saveTimers={}; // sk -> timer
 
 async function saveStickerCloud(sk, qty){
-  // cancela timer anterior para esse sticker
   if(_saveTimers[sk]) clearTimeout(_saveTimers[sk]);
-  // agenda save em 2 segundos
   _saveTimers[sk] = setTimeout(async ()=>{
     delete _saveTimers[sk];
-    try{
-      await apiDelete("collection",`?user_id=eq.${currentUser.id}&sticker_key=eq.${sk}`);
-      if(qty>0){
-        await apiPost("collection",{user_id:currentUser.id,sticker_key:sk,quantity:qty,updated_at:new Date().toISOString()});
+    let attempts=0;
+    while(attempts<3){
+      try{
+        await apiDelete("collection",`?user_id=eq.${currentUser.id}&sticker_key=eq.${sk}`);
+        if(qty>0){
+          await apiPost("collection",{user_id:currentUser.id,sticker_key:sk,quantity:qty,updated_at:new Date().toISOString()});
+        }
+        return; // sucesso
+      }catch(e){
+        attempts++;
+        console.error(`Tentativa ${attempts} falhou para ${sk}:`,e);
+        if(attempts<3) await new Promise(r=>setTimeout(r,1000*attempts)); // espera 1s, 2s
+        else showToast("⚠️ Erro ao salvar "+sk+" — verifique sua conexão");
       }
-    }catch(e){
-      console.error("Erro ao salvar",sk,e);
-      showToast("⚠️ Erro ao salvar — tente novamente");
     }
   }, 2000);
 }
