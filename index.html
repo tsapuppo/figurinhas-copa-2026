@@ -387,13 +387,15 @@ async function startApp(){
 }
 
 async function loadCollection(){
-  // Supabase é a única fonte da verdade
+  // Supabase é a única fonte da verdade — busca em lotes para evitar limite de 1000
   try{
-    const rows=await apiGet("collection",`?user_id=eq.${currentUser.id}`);
     collection={};
-    (rows||[]).forEach(r=>{
-      if(r.quantity>0) collection[r.sticker_key]=r.quantity;
-    });
+    let offset=0, chunk;
+    do {
+      chunk=await apiGet("collection",`?user_id=eq.${currentUser.id}&limit=1000&offset=${offset}`)||[];
+      chunk.forEach(r=>{ if(r.quantity>0) collection[r.sticker_key]=r.quantity; });
+      offset+=1000;
+    } while(chunk.length===1000);
     console.log("Coleção carregada:",Object.keys(collection).length,"figurinhas");
   }catch(e){
     console.error("Erro ao carregar coleção:",e);
